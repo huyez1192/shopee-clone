@@ -1,0 +1,31 @@
+package com.ecommerce.minishopee.user.admin.mapper;
+
+import com.ecommerce.minishopee.user.admin.dto.response.AdminUserResponse;
+import com.ecommerce.minishopee.user.entity.AppUser;
+import com.ecommerce.minishopee.shop.entity.Shop;
+
+public class AdminUserMapper {
+
+    private AdminUserMapper() {
+    }
+
+    public static AdminUserResponse toResponse(AppUser user, Shop shop) {
+        return AdminUserResponse.builder()
+                .id(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .avatarUrl(user.getAvatarUrl())
+                .role(user.getRole())
+                .status(user.getStatus())
+                .lockedReason(user.getLockedReason())
+                .lockedAt(user.getLockedAt())
+                .lockedByAdminId(user.getLockedByAdminId())
+                .shopId(shop == null ? null : shop.getId())
+                .shopName(shop == null ? null : shop.getName())
+                .shopStatus(shop == null ? null : shop.getStatus())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
+    }
+}

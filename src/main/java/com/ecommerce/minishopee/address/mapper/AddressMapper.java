@@ -3,7 +3,7 @@ package com.ecommerce.minishopee.address.mapper;
 import com.ecommerce.minishopee.address.dto.request.AddressRequest;
 import com.ecommerce.minishopee.address.dto.response.AddressResponse;
 import com.ecommerce.minishopee.address.entity.Address;
-import com.ecommerce.minishopee.entity.AppUser;
+import com.ecommerce.minishopee.user.entity.AppUser;
 
 public class AddressMapper {
 

@@ -3,7 +3,7 @@ package com.ecommerce.minishopee.address.service;
 import com.ecommerce.minishopee.address.dto.request.AddressRequest;
 import com.ecommerce.minishopee.address.dto.response.AddressResponse;
 import com.ecommerce.minishopee.address.entity.Address;
-import com.ecommerce.minishopee.entity.AppUser;
+import com.ecommerce.minishopee.user.entity.AppUser;
 import com.ecommerce.minishopee.address.exception.AddressNotFoundException;
 import com.ecommerce.minishopee.address.mapper.AddressMapper;
 import com.ecommerce.minishopee.address.repository.AddressRepository;
@@ -37,8 +37,7 @@ public class AddressService {
         /*
          * Địa chỉ đầu tiên tự động trở thành mặc định.
          *
-         * Hoặc nếu request.defaultAddress = true
-         * thì bỏ mặc định của các địa chỉ cũ.
+         * Hoặc nếu request.defaultAddress = true thì bỏ mặc định của các địa chỉ cũ.
          */
         if (firstAddress || request.isDefaultAddress()) {
             removeCurrentDefaultAddress(currentUser.getId());
@@ -97,10 +96,7 @@ public class AddressService {
 
         addressRepository.delete(address);
 
-        /*
-         * Nếu vừa xóa địa chỉ mặc định,
-         * lấy một địa chỉ còn lại làm mặc định.
-         */
+        // Nếu vừa xóa địa chỉ mặc định, lấy một địa chỉ còn lại làm mặc định.
         if (wasDefault) {
             List<Address> remainingAddresses =
                     addressRepository

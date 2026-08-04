@@ -1,7 +1,7 @@
 package com.ecommerce.minishopee.address.entity;
 
 
-import com.ecommerce.minishopee.entity.AppUser;
+import com.ecommerce.minishopee.user.entity.AppUser;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
