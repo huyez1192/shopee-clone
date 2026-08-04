@@ -8,11 +8,11 @@
         <version>4.1.0</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.example</groupId>
-    <artifactId>Product-CRUD-API</artifactId>
+    <groupId>com.ecommerce</groupId>
+    <artifactId>mini-shopee</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>Product-CRUD-API</name>
-    <description>Product-CRUD-API</description>
+    <name>mini-shopee</name>
+    <description>Mini-Shopee</description>
     <url/>
     <licenses>
         <license/>

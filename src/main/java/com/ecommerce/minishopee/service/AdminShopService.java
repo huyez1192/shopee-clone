@@ -1,0 +1,139 @@
+package com.ecommerce.minishopee.service;
+
+import com.ecommerce.minishopee.dto.RejectShopRequest;
+import com.ecommerce.minishopee.dto.ShopResponse;
+import com.ecommerce.minishopee.entity.AppUser;
+import com.ecommerce.minishopee.entity.Shop;
+import com.ecommerce.minishopee.entity.ShopStatus;
+import com.ecommerce.minishopee.exception.BadRequestException;
+import com.ecommerce.minishopee.exception.ShopNotFoundException;
+import com.ecommerce.minishopee.mapper.ShopMapper;
+import com.ecommerce.minishopee.repository.AppUserRepository;
+import com.ecommerce.minishopee.repository.ShopRepository;
+import com.ecommerce.minishopee.security.Role;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+public class AdminShopService {
+
+    private final ShopRepository shopRepository;
+    private final AppUserRepository appUserRepository;
+
+    public AdminShopService(ShopRepository shopRepository, AppUserRepository appUserRepository) {
+        this.shopRepository = shopRepository;
+        this.appUserRepository = appUserRepository;
+    }
+
+    // admin xem tất cả shop
+    public List<ShopResponse> getAllShops() {
+
+        return shopRepository.findAll()
+                .stream()
+                .map(ShopMapper :: toResponse)
+                .toList();
+    }
+
+    // admin xem chi tiết 1 shop
+    public ShopResponse getShopById(Long id) {
+        Shop shop = findShop(id);
+
+        return ShopMapper.toResponse(shop);
+    }
+
+
+    /*
+     * Admin duyệt shop.
+     *
+     * Hai thay đổi phải thành công cùng nhau:
+     * Shop: PENDING -> APPROVED
+     * User: USER -> SELLER
+     */
+    @Transactional
+    public ShopResponse approveShop(Long id) {
+        Shop shop = findShop(id);
+
+        if (shop.getStatus() != ShopStatus.PENDING) {
+            throw new BadRequestException("Chỉ có thể duyệt shop ở trạng thái PENDING.");
+        }
+
+        AppUser owner = shop.getOwner();
+
+        shop.setStatus(ShopStatus.APPROVED);
+        shop.setRejectionReason(null);   // Xóa lý do từ chối cũ nếu có
+        owner.setRole(Role.SELLER);
+
+        appUserRepository.save(owner);
+        Shop updatedshop = shopRepository.save(shop);
+
+        return ShopMapper.toResponse(updatedshop);
+    }
+
+
+    // admin từ chối shop
+    @Transactional
+    public ShopResponse rejectShop(Long id, RejectShopRequest request) {
+        Shop shop = findShop(id);
+
+        if (shop.getStatus() != ShopStatus.PENDING) {
+            throw new BadRequestException("Chỉ có thể từ chối shop ở trạng thái PENDING.");
+        }
+
+        shop.setStatus(ShopStatus.REJECTED);
+        shop.setRejectionReason(request.getReason().trim());
+
+        Shop updatedShop = shopRepository.save(shop);
+
+        return ShopMapper.toResponse(updatedShop);
+    }
+
+    /*
+     * Admin khóa shop.
+     *
+     * Chủ shop vẫn giữ role SELLER.
+     * Nhưng shop bị LOCKED thì không được quản lý hoặc đăng sản phẩm mới.
+     */
+    @Transactional
+    public ShopResponse lockShop(Long id) {
+        Shop shop = findShop(id);
+
+        if (shop.getStatus() != ShopStatus.APPROVED) {
+            throw new BadRequestException("Chỉ có thể khóa shop đang ở trạng thái APPROVED.");
+        }
+
+        shop.setStatus(ShopStatus.LOCKED);
+
+        Shop updatedShop = shopRepository.save(shop);
+
+        return ShopMapper.toResponse(updatedShop);
+    }
+
+
+    /*
+     * Mở khóa shop:
+     *
+     * LOCKED -> APPROVED
+     */
+    @Transactional
+    public ShopResponse unlockShop(Long id) {
+        Shop shop = findShop(id);
+
+        if (shop.getStatus() != ShopStatus.LOCKED) {
+            throw new BadRequestException("Chỉ có thể mở khóa shop ở trạng thái LOCKED.");
+        }
+
+        shop.setStatus(ShopStatus.APPROVED);
+
+        Shop updatedShop = shopRepository.save(shop);
+
+        return ShopMapper.toResponse(updatedShop);
+    }
+
+
+    private Shop findShop(Long id) {
+        return shopRepository.findById(id)
+                .orElseThrow(() -> new ShopNotFoundException(id));
+    }
+}
