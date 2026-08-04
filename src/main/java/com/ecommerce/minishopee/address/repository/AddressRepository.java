@@ -1,6 +1,6 @@
-package com.ecommerce.minishopee.repository;
+package com.ecommerce.minishopee.address.repository;
 
-import com.ecommerce.minishopee.entity.Address;
+import com.ecommerce.minishopee.address.entity.Address;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

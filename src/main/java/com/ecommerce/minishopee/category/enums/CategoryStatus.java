@@ -1,4 +1,4 @@
-package com.ecommerce.minishopee.entity;
+package com.ecommerce.minishopee.category.enums;
 
 public enum CategoryStatus {
     ACTIVE,

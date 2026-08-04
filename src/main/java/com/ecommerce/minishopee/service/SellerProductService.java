@@ -1,14 +1,16 @@
 package com.ecommerce.minishopee.service;
 
+import com.ecommerce.minishopee.category.entity.Category;
+import com.ecommerce.minishopee.category.enums.CategoryStatus;
 import com.ecommerce.minishopee.dto.ProductRequest;
 import com.ecommerce.minishopee.dto.ProductResponse;
 import com.ecommerce.minishopee.entity.*;
 import com.ecommerce.minishopee.exception.BadRequestException;
-import com.ecommerce.minishopee.exception.CategoryNotFoundException;
+import com.ecommerce.minishopee.category.exception.CategoryNotFoundException;
 import com.ecommerce.minishopee.exception.ProductNotFoundException;
 import com.ecommerce.minishopee.exception.ShopNotFoundException;
 import com.ecommerce.minishopee.mapper.ProductMapper;
-import com.ecommerce.minishopee.repository.CategoryRepository;
+import com.ecommerce.minishopee.category.repository.CategoryRepository;
 import com.ecommerce.minishopee.repository.ProductRepository;
 import com.ecommerce.minishopee.repository.ProductVariantRepository;
 import com.ecommerce.minishopee.repository.ShopRepository;

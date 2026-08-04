@@ -1,4 +1,4 @@
-package com.ecommerce.minishopee.exception;
+package com.ecommerce.minishopee.address.exception;
 
 public class AddressNotFoundException extends RuntimeException{
 

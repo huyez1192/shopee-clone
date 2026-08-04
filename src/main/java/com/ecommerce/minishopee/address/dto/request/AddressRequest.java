@@ -1,4 +1,4 @@
-package com.ecommerce.minishopee.dto;
+package com.ecommerce.minishopee.address.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

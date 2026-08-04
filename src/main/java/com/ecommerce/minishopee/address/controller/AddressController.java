@@ -1,9 +1,9 @@
-package com.ecommerce.minishopee.controller;
+package com.ecommerce.minishopee.address.controller;
 
-import com.ecommerce.minishopee.dto.AddressRequest;
-import com.ecommerce.minishopee.dto.AddressResponse;
+import com.ecommerce.minishopee.address.dto.request.AddressRequest;
+import com.ecommerce.minishopee.address.dto.response.AddressResponse;
 import com.ecommerce.minishopee.entity.AppUser;
-import com.ecommerce.minishopee.service.AddressService;
+import com.ecommerce.minishopee.address.service.AddressService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

@@ -1,7 +1,7 @@
-package com.ecommerce.minishopee.repository;
+package com.ecommerce.minishopee.category.repository;
 
-import com.ecommerce.minishopee.entity.Category;
-import com.ecommerce.minishopee.entity.CategoryStatus;
+import com.ecommerce.minishopee.category.entity.Category;
+import com.ecommerce.minishopee.category.enums.CategoryStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

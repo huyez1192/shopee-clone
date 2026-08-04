@@ -1,13 +1,12 @@
-package com.ecommerce.minishopee.service;
+package com.ecommerce.minishopee.address.service;
 
-import com.ecommerce.minishopee.dto.AddressRequest;
-import com.ecommerce.minishopee.dto.AddressResponse;
-import com.ecommerce.minishopee.entity.Address;
+import com.ecommerce.minishopee.address.dto.request.AddressRequest;
+import com.ecommerce.minishopee.address.dto.response.AddressResponse;
+import com.ecommerce.minishopee.address.entity.Address;
 import com.ecommerce.minishopee.entity.AppUser;
-import com.ecommerce.minishopee.exception.AddressNotFoundException;
-import com.ecommerce.minishopee.mapper.AddressMapper;
-import com.ecommerce.minishopee.repository.AddressRepository;
-import lombok.Setter;
+import com.ecommerce.minishopee.address.exception.AddressNotFoundException;
+import com.ecommerce.minishopee.address.mapper.AddressMapper;
+import com.ecommerce.minishopee.address.repository.AddressRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

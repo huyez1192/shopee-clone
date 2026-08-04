@@ -1,6 +1,6 @@
-package com.ecommerce.minishopee.dto;
+package com.ecommerce.minishopee.category.dto.request;
 
-import com.ecommerce.minishopee.entity.CategoryStatus;
+import com.ecommerce.minishopee.category.enums.CategoryStatus;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;

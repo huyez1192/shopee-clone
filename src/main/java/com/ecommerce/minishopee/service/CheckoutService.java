@@ -1,17 +1,18 @@
 package com.ecommerce.minishopee.service;
 
 
+import com.ecommerce.minishopee.address.entity.Address;
+import com.ecommerce.minishopee.category.enums.CategoryStatus;
 import com.ecommerce.minishopee.dto.*;
 import com.ecommerce.minishopee.entity.*;
 import com.ecommerce.minishopee.exception.BadRequestException;
-import com.ecommerce.minishopee.repository.AddressRepository;
+import com.ecommerce.minishopee.address.repository.AddressRepository;
 import com.ecommerce.minishopee.repository.CartItemRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Service

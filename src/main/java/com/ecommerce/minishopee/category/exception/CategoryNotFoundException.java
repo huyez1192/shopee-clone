@@ -1,4 +1,4 @@
-package com.ecommerce.minishopee.exception;
+package com.ecommerce.minishopee.category.exception;
 
 public class CategoryNotFoundException extends RuntimeException {
 

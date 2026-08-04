@@ -1,13 +1,13 @@
-package com.ecommerce.minishopee.service;
+package com.ecommerce.minishopee.category.service;
 
-import com.ecommerce.minishopee.dto.CategoryRequest;
-import com.ecommerce.minishopee.dto.CategoryResponse;
-import com.ecommerce.minishopee.entity.Category;
-import com.ecommerce.minishopee.entity.CategoryStatus;
+import com.ecommerce.minishopee.category.dto.request.CategoryRequest;
+import com.ecommerce.minishopee.category.dto.response.CategoryResponse;
+import com.ecommerce.minishopee.category.entity.Category;
+import com.ecommerce.minishopee.category.enums.CategoryStatus;
 import com.ecommerce.minishopee.exception.BadRequestException;
-import com.ecommerce.minishopee.exception.CategoryNotFoundException;
-import com.ecommerce.minishopee.mapper.CategoryMapper;
-import com.ecommerce.minishopee.repository.CategoryRepository;
+import com.ecommerce.minishopee.category.exception.CategoryNotFoundException;
+import com.ecommerce.minishopee.category.mapper.CategoryMapper;
+import com.ecommerce.minishopee.category.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

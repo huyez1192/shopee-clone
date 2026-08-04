@@ -1,5 +1,6 @@
 package com.ecommerce.minishopee.service;
 
+import com.ecommerce.minishopee.category.enums.CategoryStatus;
 import com.ecommerce.minishopee.dto.AddCartItemRequest;
 import com.ecommerce.minishopee.dto.CartItemResponse;
 import com.ecommerce.minishopee.dto.CartResponse;
@@ -209,6 +210,10 @@ public class CartService {
 
         if (product.getCategory().getStatus() != CategoryStatus.ACTIVE) {
             return new AvailabilityResult(CartItemAvailability.CATEGORY_UNAVAILABLE, "Danh mục sản phẩm hiện không hoạt động.");
+        }
+
+        if (product.getShop().getStatus() != ShopStatus.APPROVED) {
+            return new AvailabilityResult(CartItemAvailability.SHOP_UNAVAILABLE, "Shop hiện không hoạt động.");
         }
 
         if (variant.getStatus() == ProductVariantStatus.OUT_OF_STOCK

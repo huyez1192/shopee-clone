@@ -1,14 +1,12 @@
-package com.ecommerce.minishopee.controller;
+package com.ecommerce.minishopee.category.controller;
 
-import com.ecommerce.minishopee.dto.CategoryRequest;
-import com.ecommerce.minishopee.dto.CategoryResponse;
-import com.ecommerce.minishopee.service.CategoryService;
+import com.ecommerce.minishopee.category.dto.request.CategoryRequest;
+import com.ecommerce.minishopee.category.dto.response.CategoryResponse;
+import com.ecommerce.minishopee.category.service.CategoryService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.CacheRequest;
-import java.net.CacheResponse;
 import java.util.List;
 
 @RestController

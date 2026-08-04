@@ -1,8 +1,8 @@
-package com.ecommerce.minishopee.mapper;
+package com.ecommerce.minishopee.address.mapper;
 
-import com.ecommerce.minishopee.dto.AddressRequest;
-import com.ecommerce.minishopee.dto.AddressResponse;
-import com.ecommerce.minishopee.entity.Address;
+import com.ecommerce.minishopee.address.dto.request.AddressRequest;
+import com.ecommerce.minishopee.address.dto.response.AddressResponse;
+import com.ecommerce.minishopee.address.entity.Address;
 import com.ecommerce.minishopee.entity.AppUser;
 
 public class AddressMapper {

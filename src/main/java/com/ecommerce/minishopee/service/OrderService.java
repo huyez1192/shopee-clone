@@ -1,5 +1,7 @@
 package com.ecommerce.minishopee.service;
 
+import com.ecommerce.minishopee.address.entity.Address;
+import com.ecommerce.minishopee.category.enums.CategoryStatus;
 import com.ecommerce.minishopee.dto.CreateOrderRequest;
 import com.ecommerce.minishopee.dto.CreateOrderResponse;
 import com.ecommerce.minishopee.dto.OrderResponse;
@@ -7,7 +9,7 @@ import com.ecommerce.minishopee.entity.*;
 import com.ecommerce.minishopee.exception.BadRequestException;
 import com.ecommerce.minishopee.exception.ProductVariantNotFoundException;
 import com.ecommerce.minishopee.mapper.OrderMapper;
-import com.ecommerce.minishopee.repository.AddressRepository;
+import com.ecommerce.minishopee.address.repository.AddressRepository;
 import com.ecommerce.minishopee.repository.CartItemRepository;
 import com.ecommerce.minishopee.repository.OrderRepository;
 import com.ecommerce.minishopee.repository.ProductVariantRepository;

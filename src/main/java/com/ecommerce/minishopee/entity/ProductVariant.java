@@ -80,12 +80,11 @@ public class ProductVariant {
 
     @PreUpdate
     public void preUpdate() {
-
         this.updatedAt = LocalDateTime.now();
 
-        if (this.stockQuantity != null
-                && this.stockQuantity == 0
-                && this.status != ProductVariantStatus.DELETED) {
+        if (this.status == ProductVariantStatus.ACTIVE
+                && this.stockQuantity != null
+                && this.stockQuantity == 0) {
             this.status = ProductVariantStatus.OUT_OF_STOCK;
         }
     }

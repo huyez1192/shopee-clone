@@ -2,7 +2,7 @@ package com.ecommerce.minishopee.service;
 
 import com.ecommerce.minishopee.dto.PageResponse;
 import com.ecommerce.minishopee.dto.ProductResponse;
-import com.ecommerce.minishopee.entity.CategoryStatus;
+import com.ecommerce.minishopee.category.enums.CategoryStatus;
 import com.ecommerce.minishopee.entity.Product;
 import com.ecommerce.minishopee.entity.ProductStatus;
 import com.ecommerce.minishopee.entity.ProductVariantStatus;

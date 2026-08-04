@@ -1,5 +1,6 @@
 package com.ecommerce.minishopee.service;
 
+import com.ecommerce.minishopee.category.enums.CategoryStatus;
 import com.ecommerce.minishopee.dto.PublicProductVariantResponse;
 import com.ecommerce.minishopee.entity.*;
 import com.ecommerce.minishopee.exception.ProductNotFoundException;

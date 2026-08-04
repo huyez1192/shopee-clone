@@ -1,6 +1,6 @@
-package com.ecommerce.minishopee.dto;
+package com.ecommerce.minishopee.category.dto.response;
 
-import com.ecommerce.minishopee.entity.CategoryStatus;
+import com.ecommerce.minishopee.category.enums.CategoryStatus;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

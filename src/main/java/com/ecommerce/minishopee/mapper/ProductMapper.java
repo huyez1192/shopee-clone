@@ -2,7 +2,7 @@ package com.ecommerce.minishopee.mapper;
 
 import com.ecommerce.minishopee.dto.ProductRequest;
 import com.ecommerce.minishopee.dto.ProductResponse;
-import com.ecommerce.minishopee.entity.Category;
+import com.ecommerce.minishopee.category.entity.Category;
 import com.ecommerce.minishopee.entity.Product;
 import com.ecommerce.minishopee.entity.ProductStatus;
 import com.ecommerce.minishopee.entity.Shop;

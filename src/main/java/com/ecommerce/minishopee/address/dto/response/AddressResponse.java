@@ -1,4 +1,4 @@
-package com.ecommerce.minishopee.dto;
+package com.ecommerce.minishopee.address.dto.response;
 
 import lombok.Builder;
 import lombok.Getter;

@@ -1,8 +1,8 @@
-package com.ecommerce.minishopee.mapper;
+package com.ecommerce.minishopee.category.mapper;
 
-import com.ecommerce.minishopee.dto.CategoryRequest;
-import com.ecommerce.minishopee.dto.CategoryResponse;
-import com.ecommerce.minishopee.entity.Category;
+import com.ecommerce.minishopee.category.dto.request.CategoryRequest;
+import com.ecommerce.minishopee.category.dto.response.CategoryResponse;
+import com.ecommerce.minishopee.category.entity.Category;
 
 public class CategoryMapper {
 

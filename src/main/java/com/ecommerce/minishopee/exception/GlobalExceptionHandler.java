@@ -1,7 +1,10 @@
 package com.ecommerce.minishopee.exception;
 
+import com.ecommerce.minishopee.address.exception.AddressNotFoundException;
+import com.ecommerce.minishopee.category.exception.CategoryNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -210,5 +213,19 @@ public class GlobalExceptionHandler {
         error.put("path", request.getRequestURI());
 
         return error;
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public Map<String, Object> handleBadCredentials(
+            BadCredentialsException exception,
+            HttpServletRequest request
+    ) {
+        return Map.of(
+                "status", 401,
+                "error", "Unauthorized",
+                "message", "Email hoặc mật khẩu không chính xác.",
+                "path", request.getRequestURI()
+        );
     }
 }

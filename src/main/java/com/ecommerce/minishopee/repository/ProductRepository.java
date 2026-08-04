@@ -1,5 +1,6 @@
 package com.ecommerce.minishopee.repository;
 
+import com.ecommerce.minishopee.category.enums.CategoryStatus;
 import com.ecommerce.minishopee.entity.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
