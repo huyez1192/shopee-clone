@@ -1,33 +1,70 @@
-HELP.md
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
+# =========================
+# IntelliJ IDEA
+# =========================
+.idea/
 *.iws
 *.iml
 *.ipr
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+# =========================
+# Eclipse / STS
+# =========================
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
 
-### VS Code ###
+# =========================
+# NetBeans
+# =========================
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# =========================
+# VS Code
+# =========================
 .vscode/
+
+# =========================
+# Java / Maven backend
+# =========================
+backend/target/
+*.class
+*.log
+
+# =========================
+# Frontend / Node / Vite
+# =========================
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# =========================
+# Environment variables
+# =========================
+backend/.env
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Local Spring configuration containing secrets
+backend/src/main/resources/application-local.properties
+
+# Keep example environment files
+!backend/.env.example
+!frontend/.env.example
+
+# =========================
+# Operating system
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
