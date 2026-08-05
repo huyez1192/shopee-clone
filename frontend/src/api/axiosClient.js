@@ -1,5 +1,8 @@
 import axios from "axios";
 
+//Chứa địa chỉ backend.
+//Đặt kiểu dữ liệu JSON.
+//Đặt thời gian timeout.
 const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
@@ -8,6 +11,9 @@ const axiosClient = axios.create({
   timeout: 10000,
 });
 
+
+//Tự động gắn JWT vào request.
+// Nhờ interceptor này, ta không cần tự thêm bearer token ở từng request.
 axiosClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("accessToken");
@@ -20,6 +26,7 @@ axiosClient.interceptors.request.use(
   },
   (error) => Promise.reject(error),
 );
+
 
 axiosClient.interceptors.response.use(
   (response) => response,
