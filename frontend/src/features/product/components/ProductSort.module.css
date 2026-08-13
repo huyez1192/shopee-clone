@@ -1,0 +1,113 @@
+.sortBar {
+  display: flex;
+  min-height: 60px;
+  padding: 13px 20px;
+  align-items: center;
+  justify-content: space-between;
+  background: #ededed;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.label {
+  margin-right: 4px;
+  color: #555;
+  font-size: 14px;
+}
+
+.button,
+.activeButton {
+  min-width: 90px;
+  height: 34px;
+  padding: 0 16px;
+  cursor: pointer;
+  background: #fff;
+  border: 0;
+  border-radius: 2px;
+  font-size: 14px;
+}
+
+.activeButton {
+  color: #fff;
+  background: #ee4d2d;
+}
+
+.button:hover:not(:disabled) {
+  background: #fafafa;
+}
+
+.button:disabled {
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.priceSelect {
+  width: 200px;
+  height: 34px;
+  padding: 0 12px;
+  color: #333;
+  background: #fff;
+  border: 0;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.pageControl {
+  display: flex;
+  align-items: center;
+}
+
+.pageNumber {
+  display: flex;
+  margin-right: 20px;
+  gap: 2px;
+  color: #333;
+  font-size: 14px;
+}
+
+.pageNumber span:first-child {
+  color: #ee4d2d;
+}
+
+.pageControl button {
+  width: 36px;
+  height: 34px;
+  cursor: pointer;
+  background: #fff;
+  border: 0;
+  border-left: 1px solid #eee;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.pageControl button:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+  background: #f7f7f7;
+}
+
+@media (max-width: 800px) {
+  .sortBar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .left {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .priceSelect {
+    width: 100%;
+  }
+
+  .pageControl {
+    align-self: flex-end;
+  }
+}

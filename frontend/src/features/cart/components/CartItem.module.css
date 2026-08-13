@@ -1,0 +1,140 @@
+.item {
+  display: grid;
+  grid-template-columns:
+    minmax(350px, 2.5fr)
+    minmax(150px, 1fr)
+    minmax(110px, 0.8fr)
+    minmax(130px, 0.9fr)
+    minmax(120px, 0.9fr)
+    80px;
+
+  min-height: 130px;
+  padding: 20px;
+  align-items: center;
+
+  background: #fff;
+  border-top: 1px solid #eee;
+}
+
+.productColumn {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.productColumn input {
+  width: 16px;
+  height: 16px;
+  accent-color: #ee4d2d;
+}
+
+.imageLink {
+  width: 82px;
+  height: 82px;
+  flex-shrink: 0;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.productInfo {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.productName {
+  display: -webkit-box;
+  overflow: hidden;
+
+  color: #222;
+  text-decoration: none;
+
+  font-size: 14px;
+  line-height: 20px;
+
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.productName:hover {
+  color: #ee4d2d;
+}
+
+.variantColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  color: #777;
+  font-size: 13px;
+}
+
+.variantLabel {
+  color: #888;
+}
+
+.priceColumn {
+  color: #333;
+  font-size: 14px;
+}
+
+.quantityColumn {
+  display: flex;
+}
+
+.quantityColumn button,
+.quantityColumn span {
+  display: grid;
+  width: 34px;
+  height: 32px;
+  place-items: center;
+
+  background: #fff;
+  border: 1px solid #ddd;
+}
+
+.quantityColumn span {
+  width: 45px;
+  border-right: 0;
+  border-left: 0;
+}
+
+.quantityColumn button {
+  cursor: pointer;
+}
+
+.quantityColumn button:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.totalColumn {
+  color: #ee4d2d;
+  font-size: 14px;
+}
+
+.actionColumn button {
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.actionColumn button:hover {
+  color: #ee4d2d;
+}
+
+.unavailable {
+  opacity: 0.65;
+}
+
+.unavailableMessage {
+  color: #ee4d2d;
+  font-size: 12px;
+}

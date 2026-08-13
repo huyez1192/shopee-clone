@@ -1,5 +1,10 @@
 import axios from "axios";
 
+import { AUTH_UNAUTHORIZED_EVENT } from "../features/auth/constants/authEvents";
+
+import {clearAuthStorage, getAccessToken,} from "../features/auth/utils/authStorage";
+
+
 //Chứa địa chỉ backend.
 //Đặt kiểu dữ liệu JSON.
 //Đặt thời gian timeout.
@@ -11,12 +16,9 @@ const axiosClient = axios.create({
   timeout: 10000,
 });
 
-
-//Tự động gắn JWT vào request.
-// Nhờ interceptor này, ta không cần tự thêm bearer token ở từng request.
 axiosClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("accessToken");
+    const token = getAccessToken();
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -27,16 +29,23 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("currentUser");
-    }
+    const hasToken = Boolean(getAccessToken());
+    const isUnauthorized = error.response?.status === 401;
 
-    return Promise.reject(error);
+    /*
+     * Chỉ xóa phiên đăng nhập khi trước đó đang có token.
+     * Như vậy, lỗi 401 do nhập sai mật khẩu sẽ không gây ra hành vi không cần thiết.
+     */
+    if (isUnauthorized && hasToken) {
+          clearAuthStorage();
+
+          window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT),);
+        }
+
+        return Promise.reject(error);
   },
 );
 

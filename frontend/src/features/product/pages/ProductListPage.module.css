@@ -1,0 +1,32 @@
+.page {
+  min-height: 700px;
+  padding: 28px 0 50px;
+  background: #f5f5f5;
+}
+
+.container {
+  display: flex;
+  width: min(1200px, calc(100% - 32px));
+  margin: 0 auto;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.productContent {
+  min-width: 0;
+  flex: 1;
+}
+
+.productArea {
+  margin-top: 10px;
+}
+
+@media (max-width: 800px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .productContent {
+    width: 100%;
+  }
+}

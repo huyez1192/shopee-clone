@@ -1,20 +1,39 @@
 import { createBrowserRouter } from "react-router-dom";
 
+import GuestRoute from "./GuestRoute";
+import ProtectedRoute from "./ProtectedRoute";
+
 import MainLayout from "../layouts/MainLayout";
+
 import HomePage from "../pages/HomePage";
+import ForbiddenPage from "../pages/ForbiddenPage";
 import NotFoundPage from "../pages/NotFoundPage";
 
-import LoginPage from "../features/auth/pages/LoginPage";
-import RegisterPage from "../features/auth/pages/RegisterPage";
+import LoginPage from
+  "../features/auth/pages/LoginPage";
 
-import ProductListPage from "../features/product/pages/ProductListPage";
-import ProductDetailPage from "../features/product/pages/ProductDetailPage";
+import RegisterPage from
+  "../features/auth/pages/RegisterPage";
 
-import CartPage from "../features/cart/pages/CartPage";
-import CheckoutPage from "../features/checkout/pages/CheckoutPage";
+import ProductListPage from
+  "../features/product/pages/ProductListPage";
 
-import OrderListPage from "../features/order/pages/OrderListPage";
-import OrderDetailPage from "../features/order/pages/OrderDetailPage";
+import ProductDetailPage from
+  "../features/product/pages/ProductDetailPage";
+
+import CartPage from
+  "../features/cart/pages/CartPage";
+
+import CheckoutPage from
+  "../features/checkout/pages/CheckoutPage";
+
+import OrderListPage from
+  "../features/order/pages/OrderListPage";
+
+import OrderDetailPage from
+  "../features/order/pages/OrderDetailPage";
+
+import CheckoutLayout from "../layouts/CheckoutLayout";
 
 const router = createBrowserRouter([
   {
@@ -25,14 +44,21 @@ const router = createBrowserRouter([
         index: true,
         element: <HomePage />,
       },
+
       {
-        path: "login",
-        element: <LoginPage />,
+        element: <GuestRoute />,
+        children: [
+          {
+            path: "login",
+            element: <LoginPage />,
+          },
+          {
+            path: "register",
+            element: <RegisterPage />,
+          },
+        ],
       },
-      {
-        path: "register",
-        element: <RegisterPage />,
-      },
+
       {
         path: "products",
         element: <ProductListPage />,
@@ -41,28 +67,52 @@ const router = createBrowserRouter([
         path: "products/:productId",
         element: <ProductDetailPage />,
       },
+
       {
-        path: "cart",
-        element: <CartPage />,
+        element: <ProtectedRoute />,
+        children: [
+          {
+            path: "cart",
+            element: <CartPage />,
+          },
+          {
+            path: "orders",
+            element: <OrderListPage />,
+          },
+          {
+            path: "orders/:orderId",
+            element: <OrderDetailPage />,
+          },
+        ],
       },
+
       {
-        path: "checkout",
-        element: <CheckoutPage />,
+        path: "forbidden",
+        element: <ForbiddenPage />,
       },
-      {
-        path: "orders",
-        element: <OrderListPage />,
-      },
-      {
-        path: "orders/:orderId",
-        element: <OrderDetailPage />,
-      },
+
       {
         path: "*",
         element: <NotFoundPage />,
       },
     ],
   },
+
+  {
+      element: <ProtectedRoute />,
+      children: [
+        {
+          element: <CheckoutLayout />,
+
+          children: [
+            {
+              path: "/checkout",
+              element: <CheckoutPage />,
+            },
+          ],
+        },
+      ],
+  }
 ]);
 
 export default router;
