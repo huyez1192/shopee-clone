@@ -27,6 +27,7 @@ public class OrderMapper {
                 .id(order.getId())
                 .orderCode(order.getOrderCode())
                 .buyerId(order.getBuyer().getId())
+                .buyerName(order.getBuyer().getFullName())
                 .shopId(order.getShop().getId())
                 .shopName(order.getShop().getName())
                 .status(order.getStatus())
@@ -65,8 +66,8 @@ public class OrderMapper {
                 .variantId(item.getProductVariant().getId())
 
                  // Các thông tin hiển thị dùng snapshot, không lấy tên/ảnh hiện tại của Product.
-                .productName(item.getProductNameSnapshot())
-                .productImageUrl(item.getProductImageUrlSnapshot())
+                .productName(item.getProduct().getName())
+                .productImageUrl(item.getProduct().getImageUrl())
                 .skuCode(item.getSkuCodeSnapshot())
                 .variantName1(item.getVariantName1Snapshot())
                 .variantValue1(item.getVariantValue1Snapshot())

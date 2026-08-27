@@ -27,7 +27,7 @@ function RoleRoute({ allowedRoles }) {
     );
   }
 
-  if (!allowedRoles.includes(user.role)) {
+  if (!allowedRoles.includes(user?.role)) {
     return <Navigate to="/forbidden" replace />;
   }
 

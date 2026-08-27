@@ -1,14 +1,6 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import {useCallback,useEffect,useState,} from "react";
 
-import {
-  Link,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
+import {Link,useLocation,useNavigate,} from "react-router-dom";
 
 import EmptyState from "../../../components/common/EmptyState";
 import ErrorState from "../../../components/common/ErrorState";
@@ -33,25 +25,21 @@ function CheckoutPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const cartItemIds =
-    location.state?.cartItemIds || [];
+  const cartItemIds = location.state?.cartItemIds || [];
 
   const [addresses, setAddresses] = useState([]);
 
-  const [selectedAddressId, setSelectedAddressId] =
-    useState(null);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
 
-  const [checkoutData, setCheckoutData] =
-    useState(null);
+  const [checkoutData, setCheckoutData] = useState(null);
 
-  const [isLoading, setIsLoading] =
-    useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [isPlacingOrder, setIsPlacingOrder] =
-    useState(false);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
-  const [errorMessage, setErrorMessage] =
-    useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const [paymentMethod, setPaymentMethod] = useState("COD");
 
   const loadCheckout = useCallback(async () => {
     if (cartItemIds.length === 0) {
@@ -148,8 +136,30 @@ function CheckoutPage() {
       const response = await createOrders({
         addressId: selectedAddressId,
         cartItemIds,
-        paymentMethod: "COD",
+        paymentMethod,
       });
+
+      if (paymentMethod === "SEPAY") {
+        if (!response.payment) {
+          throw new Error(
+            "Backend không trả thông tin thanh toán SePay.",
+          );
+        }
+
+        sessionStorage.setItem(
+          "sepayPayment",
+          JSON.stringify(response.payment),
+        );
+
+        navigate("/payment/sepay", {
+          replace: true,
+          state: {
+            payment: response.payment,
+          },
+        });
+
+        return;
+      }
 
       navigate("/orders", {
         replace: true,
@@ -387,21 +397,61 @@ function CheckoutPage() {
           <div className={styles.paymentHeader}>
             <h2>Phương thức thanh toán</h2>
 
-            <button
-              type="button"
-              className={styles.paymentActive}
-            >
-              Thanh toán khi nhận hàng
-            </button>
+            <div className={styles.paymentMethods}>
+              <button
+                type="button"
+                className={
+                  paymentMethod === "COD"
+                    ? styles.paymentActive
+                    : styles.paymentOption
+                }
+                onClick={() =>
+                  setPaymentMethod("COD")
+                }
+              >
+                Thanh toán khi nhận hàng
+              </button>
+
+              <button
+                type="button"
+                className={
+                  paymentMethod === "SEPAY"
+                    ? styles.paymentActive
+                    : styles.paymentOption
+                }
+                onClick={() =>
+                  setPaymentMethod("SEPAY")
+                }
+              >
+                Chuyển khoản QR - SePay
+              </button>
+            </div>
           </div>
 
           <div className={styles.paymentDescription}>
-            <span>Thanh toán khi nhận hàng (COD)</span>
+            {paymentMethod === "COD" ? (
+              <>
+                <span>
+                  Thanh toán khi nhận hàng (COD)
+                </span>
 
-            <span>
-              Thanh toán cho đơn vị vận chuyển khi
-              nhận được hàng.
-            </span>
+                <span>
+                  Thanh toán cho đơn vị vận chuyển
+                  khi nhận được hàng.
+                </span>
+              </>
+            ) : (
+              <>
+                <span>
+                  Chuyển khoản ngân hàng qua QR
+                </span>
+
+                <span>
+                  Quét mã QR để thanh toán toàn bộ
+                  đơn hàng qua SePay.
+                </span>
+              </>
+            )}
           </div>
 
           <div className={styles.summary}>

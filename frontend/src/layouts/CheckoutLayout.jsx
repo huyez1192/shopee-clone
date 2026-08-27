@@ -1,6 +1,6 @@
 import { Link, Outlet } from "react-router-dom";
 
-import shopeeCheckoutLogo from "../assets/images/shopee-checkout-logo.png";
+import shopeeCheckoutLogo from "../assets/images/logo/shopee-checkout-logo.png";
 
 import Footer from "../components/layout/Footer";
 

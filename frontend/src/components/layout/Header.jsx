@@ -6,7 +6,7 @@ import useAuth from "../../features/auth/hooks/useAuth";
 
 import styles from "./Header.module.css";
 
-import shopeeLogo from "../../assets/images/shopee-logo.png";
+import shopeeLogo from "../../assets/images/logo/shopee-logo.png";
 
 function Header() {
   const {
@@ -17,6 +17,7 @@ function Header() {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const isHomePage = location.pathname === "/";
 
   const [searchKeyword, setSearchKeyword] = useState("");
 
@@ -41,23 +42,6 @@ function Header() {
     navigate("/login");
   }
 
-//   function handleSearchSubmit(event) {
-//     event.preventDefault();
-//
-//     const formData = new FormData(event.currentTarget);
-//     const keyword = String(
-//       formData.get("keyword") || "",
-//     ).trim();
-//
-//     if (!keyword) {
-//       navigate("/products");
-//       return;
-//     }
-//
-//     navigate(
-//       `/products?keyword=${encodeURIComponent(keyword)}&page=1`,
-//     );
-//   }
   function handleSearchSubmit(event) {
     event.preventDefault();
 
@@ -77,7 +61,13 @@ function Header() {
   }
 
   return (
-    <header className={styles.header}>
+    <header
+      className={`${styles.header} ${
+        location.pathname === "/"
+          ? styles.stickyHeader
+          : ""
+      }`}
+    >
       <div className={styles.topBar}>
         <div className={styles.container}>
           <nav className={styles.topNavigation}>

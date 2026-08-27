@@ -1,0 +1,224 @@
+.card {
+  margin-bottom: 14px;
+  background: #fff;
+}
+
+.shopHeader {
+  display: flex;
+  min-height: 52px;
+  padding: 0 20px;
+  align-items: center;
+  justify-content: space-between;
+
+  border-bottom: 1px solid #eee;
+}
+
+.shopInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shopInfo strong {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.shopBadge {
+  padding: 2px 5px;
+
+  color: #fff;
+  background: #ee4d2d;
+
+  border-radius: 2px;
+
+  font-size: 10px;
+}
+
+.shopButton {
+  padding: 5px 9px;
+
+  color: #555;
+
+  border: 1px solid #ddd;
+
+  text-decoration: none;
+
+  font-size: 12px;
+}
+
+.statusArea {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.paid {
+  color: #26aa99;
+  font-size: 12px;
+}
+
+.status {
+  color: #ee4d2d;
+
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.items {
+  display: block;
+
+  color: inherit;
+
+  text-decoration: none;
+}
+
+.item {
+  display: grid;
+
+  grid-template-columns:
+    85px
+    minmax(0, 1fr)
+    150px;
+
+  min-height: 115px;
+
+  padding: 15px 20px;
+
+  align-items: center;
+
+  border-bottom: 1px solid #eee;
+}
+
+.image {
+  width: 80px;
+  height: 80px;
+
+  object-fit: cover;
+
+  border: 1px solid #eee;
+}
+
+.itemInfo {
+  min-width: 0;
+
+  padding: 0 15px;
+}
+
+.productName {
+  overflow: hidden;
+
+  color: #222;
+
+  font-size: 14px;
+  line-height: 20px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.variant {
+  margin-top: 5px;
+
+  color: #999;
+
+  font-size: 12px;
+}
+
+.quantity {
+  margin-top: 5px;
+
+  color: #555;
+
+  font-size: 12px;
+}
+
+.itemPrice {
+  color: #ee4d2d;
+
+  text-align: right;
+
+  font-size: 14px;
+}
+
+.totalRow {
+  display: flex;
+
+  min-height: 65px;
+
+  padding: 0 20px;
+
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 12px;
+
+  background: #fffdfb;
+}
+
+.totalRow span {
+  color: #555;
+
+  font-size: 13px;
+}
+
+.totalRow strong {
+  color: #ee4d2d;
+
+  font-size: 22px;
+  font-weight: 400;
+}
+
+.footer {
+  display: flex;
+
+  min-height: 75px;
+
+  padding: 12px 20px;
+
+  align-items: center;
+  justify-content: space-between;
+
+  border-top: 1px solid #eee;
+}
+
+.orderMeta {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 5px;
+
+  color: #999;
+
+  font-size: 11px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.detailButton {
+  display: inline-flex;
+
+  min-width: 140px;
+  height: 38px;
+
+  align-items: center;
+  justify-content: center;
+
+  color: #555;
+  background: #fff;
+
+  border: 1px solid #ddd;
+
+  text-decoration: none;
+
+  font-size: 13px;
+}
+
+.detailButton:hover {
+  color: #ee4d2d;
+  border-color: #ee4d2d;
+}

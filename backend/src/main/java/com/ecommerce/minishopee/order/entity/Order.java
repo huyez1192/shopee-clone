@@ -4,6 +4,7 @@ import com.ecommerce.minishopee.order.enums.OrderCancelledBy;
 import com.ecommerce.minishopee.order.enums.OrderStatus;
 import com.ecommerce.minishopee.order.enums.PaymentMethod;
 import com.ecommerce.minishopee.order.enums.PaymentStatus;
+import com.ecommerce.minishopee.payment.entity.Payment;
 import com.ecommerce.minishopee.shop.entity.Shop;
 import com.ecommerce.minishopee.user.entity.AppUser;
 import jakarta.persistence.*;
@@ -11,7 +12,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import jakarta.persistence.Id;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,7 +25,9 @@ import java.util.List;
 @Entity
 @Table(name = "orders", indexes = {@Index(name = "idx_orders_buyer_id", columnList = "buyer_id"),
                                     @Index(name = "idx_orders_shop_id", columnList = "shop_id"),
-                                    @Index(name = "idx_orders_status", columnList = "status")})
+                                    @Index(name = "idx_orders_status", columnList = "status"),
+                                    @Index(name = "idx_orders_payment_id", columnList = "payment_id")}
+)
 public class Order {
 
     @Id
@@ -44,9 +46,27 @@ public class Order {
     @JoinColumn(name = "shop_id", nullable = false)
     private Shop shop;
 
+    /*
+     * Một Payment có thể thanh toán cho nhiều Order.
+     *
+     * Ví dụ:
+     *
+     * Payment SEPAY
+     * ├── Order Shop A
+     * ├── Order Shop B
+     * └── Order Shop C
+     *
+     * Với COD:
+     * payment có thể = null.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_id")
+    private Payment payment;
+
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
+    @Column(name = "status", nullable = false, length = 30)
     private OrderStatus status = OrderStatus.PENDING;
+
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", nullable = false, length = 30)

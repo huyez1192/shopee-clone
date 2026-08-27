@@ -21,7 +21,7 @@ import ProductGrid from "../components/ProductGrid";
 
 import {calculateTotalPages, filterProducts, paginateProducts, sortProducts,} from "../utils/productListUtils";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 25;
 
 function getPositivePage(value) {
   const parsedPage = Number(value);

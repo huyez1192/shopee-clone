@@ -22,6 +22,8 @@ import com.ecommerce.minishopee.product.repository.ProductVariantRepository;
 import com.ecommerce.minishopee.shop.repository.ShopRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.ecommerce.minishopee.order.enums.PaymentMethod;
+import com.ecommerce.minishopee.order.enums.PaymentStatus;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -97,6 +99,8 @@ public class SellerOrderService {
             throw new BadRequestException("Chỉ có thể xác nhận đơn hàng đang ở trạng thái PENDING.");
         }
 
+        validateOrderCanBeConfirmed(order);
+
         order.setStatus(OrderStatus.CONFIRMED);
 
         order.setConfirmedAt(LocalDateTime.now());
@@ -146,7 +150,7 @@ public class SellerOrderService {
 
         order.setCompletedAt(LocalDateTime.now());
 
-        // Phase 1 chỉ sử dụng COD.
+        // COD chỉ được coi là đã thanh toán khi giao hàng hoàn tất.
         if (order.getPaymentMethod() == PaymentMethod.COD) {
             order.setPaymentStatus(PaymentStatus.PAID);
         }
@@ -290,5 +294,20 @@ public class SellerOrderService {
         }
 
         productVariantRepository.saveAll(restoredVariants);
+    }
+
+    private void validateOrderCanBeConfirmed(
+            Order order
+    ) {
+        if (
+                order.getPaymentMethod()
+                        == PaymentMethod.SEPAY
+                        && order.getPaymentStatus()
+                        != PaymentStatus.PAID
+        ) {
+            throw new BadRequestException(
+                    "Đơn hàng SePay chưa được thanh toán."
+            );
+        }
     }
 }

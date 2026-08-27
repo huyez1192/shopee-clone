@@ -1,34 +1,31 @@
 import { useState } from "react";
-import {Link, useLocation, useNavigate,} from "react-router-dom";
+
+import {Link, useLocation, useNavigate, } from "react-router-dom";
 
 import useAuth from "../hooks/useAuth";
+
 import { getApiErrorMessage } from "../../../utils/getApiErrorMessage";
+
+import styles from "./LoginPage.module.css";
 
 function LoginPage() {
   const { login } = useAuth();
 
   const navigate = useNavigate();
+
   const location = useLocation();
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const redirectPath = location.state?.redirectPath || "/";
 
-  const [errorMessage, setErrorMessage] = useState("");
+  const [email, setEmail] = useState("");
+
+  const [password, setPassword] = useState("");
+
+  const [showPassword, setShowPassword] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const redirectPath =
-    location.state?.redirectPath || "/";
-
-  function handleChange(event) {
-    const { name, value } = event.target;
-
-    setFormData((currentFormData) => ({
-      ...currentFormData,
-      [name]: value,
-    }));
-  }
+  const [errorMessage, setErrorMessage] = useState("");
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -38,8 +35,8 @@ function LoginPage() {
 
     try {
       await login({
-        email: formData.email.trim(),
-        password: formData.password,
+        email: email.trim(),
+        password: password,
       });
 
       navigate(redirectPath, {
@@ -58,62 +55,111 @@ function LoginPage() {
   }
 
   return (
-    <main>
+    <section className={styles.card}>
       <h1>Đăng nhập</h1>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="email">Email</label>
+      <form
+        className={styles.form}
+        onSubmit={handleSubmit}
+      >
+        <input
+          type="email"
+          value={email}
+          placeholder="Email"
+          autoComplete="email"
+          onChange={(event) =>
+            setEmail(event.target.value)
+          }
+        />
 
+        <div className={styles.passwordField}>
           <input
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            autoComplete="email"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="password">Mật khẩu</label>
-
-          <input
-            id="password"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
+            type={
+              showPassword
+                ? "text"
+                : "password"
+            }
+            value={password}
+            placeholder="Mật khẩu"
             autoComplete="current-password"
-            required
+            onChange={(event) =>
+              setPassword(event.target.value)
+            }
           />
+
+          <button
+            type="button"
+            onClick={() =>
+              setShowPassword(
+                (current) => !current,
+              )
+            }
+          >
+            {showPassword ? "Ẩn" : "Hiện"}
+          </button>
         </div>
 
         {errorMessage && (
-          <p role="alert">{errorMessage}</p>
+          <p className={styles.errorMessage}>
+            {errorMessage}
+          </p>
         )}
 
         <button
           type="submit"
+          className={styles.loginButton}
           disabled={isSubmitting}
         >
           {isSubmitting
-            ? "Đang đăng nhập..."
-            : "Đăng nhập"}
+            ? "ĐANG ĐĂNG NHẬP..."
+            : "ĐĂNG NHẬP"}
         </button>
-      </form>
 
-      <p>
-        Chưa có tài khoản?{" "}
-        <Link
-          to="/register"
-          state={{ redirectPath }}
-        >
-          Đăng ký
-        </Link>
-      </p>
-    </main>
+        <div className={styles.links}>
+          <button type="button">
+            Quên mật khẩu
+          </button>
+        </div>
+
+        <div className={styles.divider}>
+          <span />
+          <p>HOẶC</p>
+          <span />
+        </div>
+
+        <div className={styles.social}>
+          <button type="button">
+            <strong>f</strong>
+            Facebook
+          </button>
+
+          <button type="button">
+            <strong>G</strong>
+            Google
+          </button>
+        </div>
+
+        <p className={styles.terms}>
+          Bằng việc đăng nhập, bạn đồng ý
+          với Shopee về{" "}
+          <span>
+            Điều khoản dịch vụ
+          </span>{" "}
+          &{" "}
+          <span>
+            Chính sách bảo mật
+          </span>
+        </p>
+
+        <div className={styles.register}>
+          Bạn mới biết đến Shopee?
+
+          <Link to="/register">
+            Đăng ký
+          </Link>
+        </div>
+      </form>
+    </section>
   );
 }
 

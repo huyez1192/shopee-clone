@@ -1,14 +1,13 @@
 package com.ecommerce.minishopee.order.dto.response;
 
+import com.ecommerce.minishopee.payment.dto.response.PaymentResponse;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
-@Setter
 @Builder
 public class CreateOrderResponse {
 
@@ -21,4 +20,6 @@ public class CreateOrderResponse {
     private BigDecimal shippingTotal;
 
     private BigDecimal grandTotal;
+
+    private PaymentResponse payment;
 }

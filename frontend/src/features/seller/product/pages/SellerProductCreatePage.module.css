@@ -1,0 +1,686 @@
+.page {
+  min-height: calc(100vh - 90px);
+}
+
+.pageHeader {
+  margin-bottom: 16px;
+
+  padding: 20px 24px;
+
+  background: #fff;
+
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.pageHeader h1 {
+  margin: 0;
+
+  color: #222;
+
+  font-size: 21px;
+  font-weight: 500;
+}
+
+.pageHeader p {
+  margin: 7px 0 0;
+
+  color: #999;
+
+  font-size: 12px;
+}
+
+/* ================= FORM ================= */
+
+.form {
+  padding-bottom: 85px;
+}
+
+/* ================= TAB ================= */
+
+.tabs {
+  position: sticky;
+
+  top: 0;
+  z-index: 5;
+
+  display: flex;
+
+  height: 60px;
+
+  padding: 0 20px;
+
+  align-items: stretch;
+
+  background: #fff;
+
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.tabs a {
+  position: relative;
+
+  display: flex;
+
+  min-width: 160px;
+
+  align-items: center;
+  justify-content: center;
+
+  color: #333;
+
+  text-decoration: none;
+
+  font-size: 14px;
+}
+
+.tabs a.activeTab {
+  color: #ee4d2d;
+}
+
+.tabs a.activeTab::after {
+  position: absolute;
+
+  right: 15px;
+  bottom: 0;
+  left: 15px;
+
+  height: 3px;
+
+  content: "";
+
+  background: #ee4d2d;
+}
+
+/* ================= CARD ================= */
+
+.card {
+  margin-top: 16px;
+
+  padding: 26px 30px 35px;
+
+  background: #fff;
+
+  border: 1px solid #eee;
+  border-radius: 5px;
+}
+
+.card h2 {
+  margin: 0 0 30px;
+
+  color: #222;
+
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.card h3 {
+  margin: 0 0 15px;
+
+  color: #333;
+
+  font-size: 14px;
+}
+
+/* ================= ROW ================= */
+
+.formRow {
+  display: grid;
+
+  margin-bottom: 25px;
+
+  grid-template-columns:
+    180px
+    minmax(0, 1fr);
+
+  align-items: start;
+
+  gap: 20px;
+}
+
+.formRow > label {
+  padding-top: 11px;
+
+  color: #555;
+
+  text-align: right;
+
+  font-size: 13px;
+}
+
+.formRow > label span {
+  margin-right: 4px;
+
+  color: #ee4d2d;
+}
+
+.formRow > input,
+.formRow > select {
+  width: 100%;
+  height: 42px;
+
+  padding: 0 12px;
+
+  color: #444;
+  background: #fff;
+
+  border: 1px solid #ddd;
+  border-radius: 3px;
+
+  outline: none;
+
+  font-size: 13px;
+}
+
+.formRow > input:focus,
+.formRow > select:focus {
+  border-color: #888;
+}
+
+/* ================= IMAGE ================= */
+
+.imageArea {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 18px;
+}
+
+.imagePreview {
+  display: flex;
+
+  width: 96px;
+  height: 96px;
+
+  flex-shrink: 0;
+
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  color: #ee4d2d;
+  background: #fff;
+
+  border: 1px dashed #ee4d2d;
+  border-radius: 3px;
+
+  gap: 5px;
+
+  font-size: 11px;
+}
+
+.imagePreview img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.imageIcon {
+  font-size: 28px;
+}
+
+.imageInput {
+  width: min(600px, 100%);
+}
+
+.imageInput input {
+  width: 100%;
+  height: 42px;
+
+  padding: 0 12px;
+
+  border: 1px solid #ddd;
+  border-radius: 3px;
+
+  outline: none;
+}
+
+.imageInput input:focus {
+  border-color: #888;
+}
+
+.imageInput small {
+  display: block;
+
+  margin-top: 7px;
+
+  color: #999;
+
+  font-size: 11px;
+}
+
+/* ================= NORMAL INPUT ================= */
+
+.inputWrapper {
+  position: relative;
+}
+
+.inputWrapper input {
+  width: 100%;
+  height: 42px;
+
+  padding: 0 65px 0 12px;
+
+  border: 1px solid #ddd;
+  border-radius: 3px;
+
+  outline: none;
+}
+
+.inputWrapper input:focus {
+  border-color: #888;
+}
+
+.counter {
+  position: absolute;
+
+  top: 50%;
+  right: 12px;
+
+  color: #aaa;
+
+  transform: translateY(-50%);
+
+  font-size: 11px;
+}
+
+/* ================= DESCRIPTION ================= */
+
+.textareaWrapper {
+  position: relative;
+}
+
+.textareaWrapper textarea {
+  width: 100%;
+
+  padding: 12px;
+
+  resize: vertical;
+
+  border: 1px solid #ddd;
+  border-radius: 3px;
+
+  outline: none;
+
+  font-family: inherit;
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.textareaWrapper textarea:focus {
+  border-color: #888;
+}
+
+.textareaCounter {
+  position: absolute;
+
+  right: 12px;
+  bottom: 10px;
+
+  color: #aaa;
+
+  font-size: 11px;
+}
+
+/* ================= PRICE ================= */
+
+.moneyInput,
+.tableInput {
+  display: flex;
+
+  height: 42px;
+
+  align-items: center;
+
+  border: 1px solid #ddd;
+  border-radius: 3px;
+}
+
+.moneyInput > span,
+.tableInput > span {
+  display: grid;
+
+  width: 42px;
+  height: 100%;
+
+  place-items: center;
+
+  color: #777;
+
+  border-right: 1px solid #ddd;
+}
+
+.moneyInput input,
+.tableInput input {
+  width: 100%;
+  height: 100%;
+
+  padding: 0 12px;
+
+  border: 0;
+  outline: none;
+}
+
+/* ================= VARIANT ================= */
+
+.variantSection {
+  width: 100%;
+}
+
+.addVariantButton {
+  padding: 11px 18px;
+
+  color: #ee4d2d;
+  background: #fff;
+
+  border: 1px dashed #ee4d2d;
+  border-radius: 3px;
+
+  cursor: pointer;
+
+  font-size: 13px;
+}
+
+.variantGroup {
+  margin-bottom: 14px;
+
+  padding: 18px;
+
+  background: #f8f8f8;
+
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.variantGroupHeader {
+  display: flex;
+
+  margin-bottom: 12px;
+
+  align-items: center;
+  justify-content: space-between;
+}
+
+.variantGroupHeader strong {
+  color: #555;
+
+  font-size: 13px;
+}
+
+.variantGroupHeader button {
+  color: #ee4d2d;
+  background: transparent;
+
+  border: 0;
+
+  cursor: pointer;
+}
+
+.variantGroup > input {
+  width: 100%;
+  height: 40px;
+
+  padding: 0 12px;
+
+  border: 1px solid #ddd;
+  border-radius: 3px;
+
+  outline: none;
+}
+
+.variantValues {
+  display: flex;
+
+  margin-top: 12px;
+
+  gap: 10px;
+}
+
+.variantValue {
+  position: relative;
+
+  flex: 1;
+}
+
+.variantValue input {
+  width: 100%;
+  height: 38px;
+
+  padding: 0 35px 0 12px;
+
+  border: 1px solid #ddd;
+
+  outline: none;
+}
+
+.variantValue button {
+  position: absolute;
+
+  top: 50%;
+  right: 7px;
+
+  color: #999;
+  background: transparent;
+
+  border: 0;
+
+  transform: translateY(-50%);
+
+  cursor: pointer;
+
+  font-size: 18px;
+}
+
+.addValueButton {
+  margin-top: 10px;
+
+  padding: 0;
+
+  color: #2673dd;
+  background: transparent;
+
+  border: 0;
+
+  cursor: pointer;
+
+  font-size: 12px;
+}
+
+.variantActions {
+  display: flex;
+
+  margin-top: 14px;
+
+  align-items: center;
+
+  gap: 10px;
+}
+
+.generateButton {
+  padding: 11px 18px;
+
+  color: #fff;
+  background: #ee4d2d;
+
+  border: 1px solid #ee4d2d;
+  border-radius: 3px;
+
+  cursor: pointer;
+
+  font-size: 13px;
+}
+
+/* ================= VARIANT TABLE ================= */
+
+.variantTableSection {
+  margin-top: 30px;
+}
+
+.variantTable {
+  overflow: hidden;
+
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+}
+
+.variantTableHeader,
+.variantTableRow {
+  display: grid;
+
+  grid-template-columns:
+    minmax(200px, 1fr)
+    250px
+    200px;
+
+  align-items: center;
+
+  gap: 15px;
+}
+
+.variantTableHeader {
+  min-height: 45px;
+
+  padding: 0 15px;
+
+  color: #777;
+  background: #f7f7f7;
+
+  font-size: 12px;
+}
+
+.variantTableRow {
+  min-height: 62px;
+
+  padding: 10px 15px;
+
+  border-top: 1px solid #eee;
+}
+
+.variantTableRow > input {
+  width: 100%;
+  height: 42px;
+
+  padding: 0 12px;
+
+  border: 1px solid #ddd;
+  border-radius: 3px;
+
+  outline: none;
+}
+
+.variantLabel {
+  color: #555;
+
+  font-size: 13px;
+}
+
+.variantLabel span {
+  color: #999;
+}
+
+/* ================= ERROR ================= */
+
+.errorMessage {
+  margin-top: 15px;
+
+  padding: 12px 16px;
+
+  color: #c62828;
+  background: #fff1f0;
+
+  border: 1px solid #ffcdd2;
+  border-radius: 3px;
+
+  font-size: 12px;
+}
+
+/* ================= FOOTER ================= */
+
+.footer {
+  position: sticky;
+
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+
+  display: flex;
+
+  margin-top: 16px;
+
+  min-height: 70px;
+
+  padding: 12px 25px;
+
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 12px;
+
+  background: #fff;
+
+  border-top: 1px solid #eee;
+
+  box-shadow:
+    0 -2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.cancelButton,
+.submitButton {
+  min-width: 150px;
+  height: 40px;
+
+  border-radius: 3px;
+
+  cursor: pointer;
+
+  font-size: 13px;
+}
+
+.cancelButton {
+  color: #555;
+  background: #fff;
+
+  border: 1px solid #ddd;
+}
+
+.submitButton {
+  color: #fff;
+  background: #ee4d2d;
+
+  border: 1px solid #ee4d2d;
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+
+  cursor: default;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 900px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .formRow > label {
+    padding-top: 0;
+
+    text-align: left;
+  }
+
+  .variantTableHeader,
+  .variantTableRow {
+    grid-template-columns:
+      1fr
+      1fr
+      1fr;
+  }
+}

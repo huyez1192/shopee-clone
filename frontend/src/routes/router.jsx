@@ -2,83 +2,86 @@ import { createBrowserRouter } from "react-router-dom";
 
 import GuestRoute from "./GuestRoute";
 import ProtectedRoute from "./ProtectedRoute";
+import RoleRoute from "./RoleRoute";
 
 import MainLayout from "../layouts/MainLayout";
+import CheckoutLayout from "../layouts/CheckoutLayout";
+import SellerLayout from "../layouts/SellerLayout";
+import AuthLayout from "../layouts/AuthLayout";
 
 import HomePage from "../pages/HomePage";
 import ForbiddenPage from "../pages/ForbiddenPage";
 import NotFoundPage from "../pages/NotFoundPage";
 
-import LoginPage from
-  "../features/auth/pages/LoginPage";
+import LoginPage from "../features/auth/pages/LoginPage";
+import RegisterPage from "../features/auth/pages/RegisterPage";
 
-import RegisterPage from
-  "../features/auth/pages/RegisterPage";
+import ProductListPage from "../features/product/pages/ProductListPage";
+import ProductDetailPage from "../features/product/pages/ProductDetailPage";
 
-import ProductListPage from
-  "../features/product/pages/ProductListPage";
+import CartPage from "../features/cart/pages/CartPage";
 
-import ProductDetailPage from
-  "../features/product/pages/ProductDetailPage";
+import CheckoutPage from "../features/checkout/pages/CheckoutPage";
 
-import CartPage from
-  "../features/cart/pages/CartPage";
+import OrderListPage from "../features/order/pages/OrderListPage";
+import OrderDetailPage from "../features/order/pages/OrderDetailPage";
 
-import CheckoutPage from
-  "../features/checkout/pages/CheckoutPage";
+import SePayPaymentPage from "../features/payment/pages/SePayPaymentPage";
+import PaymentSuccessPage from "../features/payment/pages/PaymentSuccessPage";
 
-import OrderListPage from
-  "../features/order/pages/OrderListPage";
+import SellerOrderListPage from "../features/seller/order/pages/SellerOrderListPage";
+import SellerOrderDetailPage from "../features/seller/order/pages/SellerOrderDetailPage";
+import SellerProductCreatePage from "../features/seller/product/pages/SellerProductCreatePage";
+import SellerProductListPage from "../features/seller/product/pages/SellerProductListPage";
+import SellerInventoryPage from "../features/seller/inventory/pages/SellerInventoryPage";
 
-import OrderDetailPage from
-  "../features/order/pages/OrderDetailPage";
-
-import CheckoutLayout from "../layouts/CheckoutLayout";
 
 const router = createBrowserRouter([
+  // =====================================================
+  // MAIN
+  // =====================================================
   {
     path: "/",
     element: <MainLayout />,
+
     children: [
       {
         index: true,
         element: <HomePage />,
       },
 
-      {
-        element: <GuestRoute />,
-        children: [
-          {
-            path: "login",
-            element: <LoginPage />,
-          },
-          {
-            path: "register",
-            element: <RegisterPage />,
-          },
-        ],
-      },
 
+
+      // =====================================================
+      // PRODUCT
+      // =====================================================
       {
         path: "products",
         element: <ProductListPage />,
       },
+
       {
         path: "products/:productId",
         element: <ProductDetailPage />,
       },
 
+      // =====================================================
+      // USER ĐÃ ĐĂNG NHẬP
+      // =====================================================
       {
         element: <ProtectedRoute />,
+
         children: [
           {
             path: "cart",
             element: <CartPage />,
           },
+
           {
             path: "orders",
             element: <OrderListPage />,
           },
+
           {
             path: "orders/:orderId",
             element: <OrderDetailPage />,
@@ -86,6 +89,9 @@ const router = createBrowserRouter([
         ],
       },
 
+      // =====================================================
+      // ERROR
+      // =====================================================
       {
         path: "forbidden",
         element: <ForbiddenPage />,
@@ -98,21 +104,99 @@ const router = createBrowserRouter([
     ],
   },
 
+  // =====================================================
+  // CHECKOUT / PAYMENT
+  // =====================================================
   {
-      element: <ProtectedRoute />,
-      children: [
+    element: <ProtectedRoute />,
+
+    children: [
+      {
+        element: <CheckoutLayout />,
+
+        children: [
+          {
+            path: "/checkout",
+            element: <CheckoutPage />,
+          },
+
+          {
+            path: "/payment/sepay",
+            element: <SePayPaymentPage />,
+          },
+
+          {
+            path: "/payment/success",
+            element: <PaymentSuccessPage />,
+          },
+        ],
+      },
+    ],
+  },
+
+  // =====================================================
+  // SELLER
+  // =====================================================
+  {
+    element: (
+      <RoleRoute allowedRoles={["SELLER"]} />
+    ),
+
+    children: [
         {
-          element: <CheckoutLayout />,
+          path: "/seller",
+          element: <SellerLayout />,
 
           children: [
             {
-              path: "/checkout",
-              element: <CheckoutPage />,
+              path: "orders",
+              element: <SellerOrderListPage />,
+            },
+            {
+              path: "orders/:orderId",
+              element: <SellerOrderDetailPage />,
+            },
+            {
+              path: "products",
+              element: <SellerProductListPage />,
+            },
+            {
+              path: "products/create",
+              element: <SellerProductCreatePage />,
+            },
+            {
+              path: "inventory",
+              element: <SellerInventoryPage />,
             },
           ],
         },
       ],
-  }
+  },
+
+  // =====================================================
+  // GUEST
+  // =====================================================
+  {
+      element: <GuestRoute />,
+
+      children: [
+          {
+            element: <AuthLayout />,
+
+            children: [
+              {
+                path: "/login",
+                element: <LoginPage />,
+              },
+
+              {
+                path: "/register",
+                element: <RegisterPage />,
+              },
+            ],
+          },
+      ],
+    },
 ]);
 
 export default router;

@@ -1,0 +1,188 @@
+.page {
+  min-height: 700px;
+  padding: 40px 16px 80px;
+  background: #f5f5f5;
+}
+
+.card {
+  width: min(850px, 100%);
+  margin: 0 auto;
+
+  overflow: hidden;
+
+  background: #fff;
+  border-radius: 4px;
+
+  box-shadow:
+    0 1px 5px rgba(0, 0, 0, 0.08);
+}
+
+.header {
+  padding: 28px 35px;
+
+  text-align: center;
+
+  border-bottom: 1px solid #eee;
+}
+
+.header h1 {
+  margin: 0 0 8px;
+
+  color: #222;
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.header p {
+  margin: 0;
+  color: #777;
+  font-size: 14px;
+}
+
+.content {
+  display: grid;
+
+  grid-template-columns:
+    minmax(300px, 1fr)
+    minmax(320px, 1fr);
+
+  gap: 40px;
+
+  padding: 35px;
+}
+
+.qrSection {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.qrImage {
+  width: 280px;
+  max-width: 100%;
+  height: auto;
+
+  object-fit: contain;
+}
+
+.waiting {
+  margin-top: 15px;
+
+  color: #26aa99;
+  font-size: 14px;
+}
+
+.expired {
+  margin-top: 15px;
+
+  color: #ee4d2d;
+  font-size: 14px;
+}
+
+.paymentInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.infoRow {
+  display: flex;
+
+  min-height: 52px;
+
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  border-bottom: 1px solid #eee;
+}
+
+.infoRow span {
+  color: #777;
+  font-size: 13px;
+}
+
+.infoRow strong {
+  color: #333;
+
+  text-align: right;
+
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.infoRow .amount {
+  color: #ee4d2d;
+
+  font-size: 22px;
+}
+
+.paymentCode {
+  color: #ee4d2d !important;
+}
+
+.pending {
+  color: #f5a623 !important;
+}
+
+.countdown {
+  color: #ee4d2d !important;
+}
+
+.expiredText {
+  color: #999 !important;
+}
+
+.notice {
+  display: flex;
+
+  margin: 0 35px;
+  padding: 18px;
+
+  gap: 8px;
+
+  color: #666;
+  background: #fff8f5;
+
+  border: 1px solid #ffddd5;
+
+  font-size: 13px;
+}
+
+.notice strong {
+  color: #ee4d2d;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+
+  padding: 25px 35px;
+
+  justify-content: flex-end;
+}
+
+.orderLink {
+  display: inline-flex;
+
+  min-width: 150px;
+  height: 42px;
+
+  align-items: center;
+  justify-content: center;
+
+  color: #fff;
+  background: #ee4d2d;
+
+  text-decoration: none;
+  border-radius: 2px;
+}
+
+.orderLink:hover {
+  background: #d73211;
+}
+
+@media (max-width: 720px) {
+  .content {
+    grid-template-columns: 1fr;
+  }
+}

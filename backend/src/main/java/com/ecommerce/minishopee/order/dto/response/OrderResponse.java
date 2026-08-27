@@ -23,6 +23,8 @@ public class OrderResponse {
 
     private Long buyerId;
 
+    private String buyerName;
+
     private Long shopId;
 
     private String shopName;

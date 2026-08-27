@@ -68,3 +68,8 @@ backend/src/main/resources/application-local.properties
 .DS_Store
 Thumbs.db
 desktop.ini
+
+
+
+
+spring.profiles.active=local

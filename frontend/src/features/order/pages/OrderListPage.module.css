@@ -1,0 +1,196 @@
+.page {
+  min-height: 700px;
+
+  padding: 25px 0 70px;
+
+  background: #f5f5f5;
+}
+
+.container {
+  display: grid;
+
+  width: min(
+    1200px,
+    calc(100% - 32px)
+  );
+
+  margin: 0 auto;
+
+  grid-template-columns:
+    190px
+    minmax(0, 1fr);
+
+  gap: 20px;
+}
+
+/* SIDEBAR */
+
+.sidebar {
+  align-self: start;
+}
+
+.profile {
+  display: flex;
+
+  min-height: 75px;
+
+  align-items: center;
+
+  gap: 12px;
+
+  border-bottom: 1px solid #ddd;
+}
+
+.avatar {
+  display: grid;
+
+  width: 48px;
+  height: 48px;
+
+  place-items: center;
+
+  color: #aaa;
+  background: #fff;
+
+  border: 1px solid #ddd;
+  border-radius: 50%;
+
+  font-size: 24px;
+}
+
+.profile div:last-child {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.profile strong {
+  overflow: hidden;
+
+  color: #333;
+
+  font-size: 13px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile span {
+  margin-top: 4px;
+
+  color: #999;
+
+  font-size: 11px;
+}
+
+.sideNav {
+  display: flex;
+
+  padding-top: 18px;
+
+  flex-direction: column;
+
+  gap: 16px;
+}
+
+.sideNav a {
+  color: #555;
+
+  text-decoration: none;
+
+  font-size: 13px;
+}
+
+.sideNav a:hover {
+  color: #ee4d2d;
+}
+
+.sideNav .sideActive {
+  color: #ee4d2d;
+}
+
+/* CONTENT */
+
+.content {
+  min-width: 0;
+}
+
+.tabs {
+  display: grid;
+
+  grid-template-columns:
+    repeat(7, 1fr);
+
+  min-height: 60px;
+
+  background: #fff;
+}
+
+.tab,
+.activeTab {
+  position: relative;
+
+  padding: 0 8px;
+
+  color: #333;
+  background: transparent;
+
+  border: 0;
+
+  cursor: pointer;
+
+  font-size: 13px;
+}
+
+.tab:hover {
+  color: #ee4d2d;
+}
+
+.activeTab {
+  color: #ee4d2d;
+}
+
+.activeTab::after {
+  position: absolute;
+
+  right: 0;
+  bottom: 0;
+  left: 0;
+
+  height: 2px;
+
+  content: "";
+
+  background: #ee4d2d;
+}
+
+.orders {
+  margin-top: 14px;
+}
+
+.emptyWrapper {
+  min-height: 400px;
+
+  margin-top: 14px;
+
+  background: #fff;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 900px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .tabs {
+    overflow-x: auto;
+
+    grid-template-columns:
+      repeat(7, minmax(130px, 1fr));
+  }
+}

@@ -1,0 +1,747 @@
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+/* ================= HERO ================= */
+
+.hero {
+  padding-top: 30px;
+  background: #fff;
+}
+
+.heroGrid {
+  display: grid;
+
+  width: min(1200px, calc(100% - 32px));
+  height: 235px;
+
+  margin: 0 auto;
+
+  grid-template-columns:
+    minmax(0, 2fr)
+    minmax(320px, 1fr);
+
+  gap: 5px;
+}
+
+.mainBanner {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: hidden;
+
+  background: #eee;
+}
+
+.bannerTrack {
+  display: flex;
+
+  width: 100%;
+  height: 100%;
+}
+
+.bannerSlide {
+  display: block;
+
+  flex: 0 0 100%;
+
+  width: 100%;
+  height: 100%;
+
+  text-decoration: none;
+}
+
+.bannerSlide img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.bannerDots {
+  position: absolute;
+
+  bottom: 10px;
+  left: 50%;
+
+  display: flex;
+
+  gap: 8px;
+
+  transform: translateX(-50%);
+
+  z-index: 2;
+}
+
+.dot,
+.activeDot {
+  width: 10px;
+  height: 10px;
+
+  padding: 0;
+
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+
+  cursor: pointer;
+}
+
+.dot {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.activeDot {
+  background: #ee4d2d;
+}
+
+.sideBanners {
+  display: grid;
+
+  grid-template-rows: 1fr 1fr;
+
+  gap: 5px;
+}
+
+.sideBannerImage {
+  display: block;
+
+  min-width: 0;
+  min-height: 0;
+
+  overflow: hidden;
+}
+
+.sideBannerImage img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+
+/* ================= SHORTCUT ================= */
+
+.shortcuts {
+  display: grid;
+
+  width: min(1200px, calc(100% - 32px));
+
+  margin: 0 auto;
+
+  padding: 20px 0;
+
+  grid-template-columns:
+    repeat(6, 1fr);
+}
+
+.shortcut {
+  display: flex;
+
+  align-items: center;
+  flex-direction: column;
+
+  gap: 8px;
+
+  color: #222;
+
+  text-align: center;
+  text-decoration: none;
+
+  font-size: 13px;
+}
+
+.shortcut:hover {
+  transform: translateY(-2px);
+}
+
+.shortcutIcon {
+  display: grid;
+
+  width: 48px;
+  height: 48px;
+
+  place-items: center;
+
+  overflow: hidden;
+
+  background: #fff;
+
+
+
+
+  font-size: 25px;
+}
+
+.shortcutIcon img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+}
+
+/* ================= COMMON ================= */
+
+.homeContainer {
+  width: min(1200px, calc(100% - 32px));
+
+  margin: 20px auto 0;
+}
+
+.section {
+  margin-bottom: 20px;
+
+  background: #fff;
+}
+
+.sectionTitle {
+  padding: 20px;
+
+  color: #777;
+
+  border-bottom: 1px solid #eee;
+
+  font-size: 17px;
+}
+
+.sectionHeader {
+  display: flex;
+
+  min-height: 60px;
+
+  padding: 0 20px;
+
+  align-items: center;
+  justify-content: space-between;
+
+  border-bottom: 1px solid #eee;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+
+  font-size: 19px;
+  font-weight: 500;
+}
+
+.sectionHeader a,
+.mallHeader a {
+  color: #ee4d2d;
+
+  text-decoration: none;
+
+  font-size: 13px;
+}
+
+/* ================= CATEGORY ================= */
+
+.categoryGrid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(10, 1fr);
+}
+
+.categoryItem {
+  display: flex;
+
+  min-height: 145px;
+
+  padding: 15px 8px;
+
+  align-items: center;
+  flex-direction: column;
+
+  gap: 9px;
+
+  color: #333;
+
+  border-right: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+
+  text-align: center;
+  text-decoration: none;
+
+  font-size: 13px;
+}
+
+.categoryItem:hover {
+  position: relative;
+
+  z-index: 1;
+
+  border-color: #ddd;
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.categoryImage {
+  width: 75px;
+  height: 75px;
+
+  overflow: hidden;
+
+  background: #f5f5f5;
+
+  border-radius: 50%;
+}
+
+.categoryImage img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+}
+
+/* ================= FLASH SALE ================= */
+
+.flashTitle {
+  color: #ee4d2d;
+}
+
+.flashGrid {
+  display: grid;
+
+  padding: 0 15px 16px;
+
+  grid-template-columns:
+    repeat(6, 1fr);
+
+  gap: 14px;
+}
+
+.flashCard {
+  position: relative;
+
+  display: flex;
+
+  min-width: 0;
+
+  align-items: center;
+  flex-direction: column;
+
+  color: inherit;
+
+  text-decoration: none;
+}
+
+.flashImageWrapper {
+  position: relative;
+
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+.flashImageWrapper img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.discount {
+  position: absolute;
+
+  top: 0;
+  right: 0;
+
+  padding: 5px 7px;
+
+  color: #ee4d2d;
+  background: #ffd839;
+
+  font-size: 12px;
+}
+
+.flashCard > strong {
+  margin: 12px 0 8px;
+
+  color: #ee4d2d;
+
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.flashProgress {
+  width: 90%;
+  height: 17px;
+
+  overflow: hidden;
+
+  color: #fff;
+  background: #ffb9aa;
+
+  border-radius: 10px;
+
+  text-align: center;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.flashProgress::before {
+  float: left;
+
+  width: 45%;
+  height: 100%;
+
+  content: "";
+
+  background: #ee4d2d;
+}
+
+.flashProgress span {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+}
+
+/* ================= MALL ================= */
+
+.mallHeader {
+  display: flex;
+
+  min-height: 60px;
+
+  padding: 0 20px;
+
+  align-items: center;
+  justify-content: space-between;
+
+  border-bottom: 1px solid #eee;
+}
+
+.mallHeader > div {
+  display: flex;
+
+  align-items: center;
+
+  gap: 18px;
+}
+
+.mallHeader strong {
+  color: #d0011b;
+
+  font-size: 18px;
+}
+
+.mallHeader span {
+  font-size: 13px;
+}
+
+.mallBody {
+  display: grid;
+
+  padding: 12px;
+
+  grid-template-columns:
+    390px
+    minmax(0, 1fr);
+
+  gap: 20px;
+}
+
+.mallBanner {
+  display: block;
+
+  min-height: 460px;
+
+  overflow: hidden;
+
+  text-decoration: none;
+}
+
+.mallBanner img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.mallGrid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, 1fr);
+}
+
+.mallItem {
+  display: flex;
+
+  padding: 10px;
+
+  align-items: center;
+  flex-direction: column;
+
+  color: #d0011b;
+
+  text-align: center;
+  text-decoration: none;
+
+  font-size: 15px;
+  font-weight: 400;
+}
+
+.mallItem img {
+  width: 125px;
+  height: 125px;
+
+  object-fit: contain;
+}
+
+.mallItem strong {
+  margin-top: 8px;
+
+  font-weight: 400;
+}
+
+/* ================= TOP SEARCH ================= */
+
+.topSearchTitle {
+  color: #ee4d2d;
+}
+
+.topSearchGrid {
+  display: grid;
+
+  padding: 20px 12px;
+
+  grid-template-columns:
+    repeat(6, 1fr);
+
+  gap: 20px;
+}
+
+.topSearchItem {
+  color: #333;
+
+  text-decoration: none;
+}
+
+.topImage {
+  position: relative;
+
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+.topImage img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.topImage > span {
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  padding: 8px 5px;
+
+  color: #fff;
+  background: #ff5722;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.topImage > div {
+  position: absolute;
+
+  right: 0;
+  bottom: 0;
+  left: 0;
+
+  padding: 5px;
+
+  color: #fff;
+  background: rgba(0, 0, 0, 0.38);
+
+  text-align: center;
+
+  font-size: 12px;
+}
+
+.topSearchItem > strong {
+  display: block;
+
+  margin-top: 12px;
+
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+/* ================= SUGGESTION ================= */
+
+.suggestionSection {
+  margin-bottom: 40px;
+}
+
+.suggestionTitle {
+  width: 100%;
+
+  padding: 18px;
+
+  color: #ee4d2d;
+  background: #fff;
+
+  border: 0;
+  border-bottom: 4px solid #ee4d2d;
+
+  text-align: center;
+
+  font-size: 17px;
+
+  cursor: pointer;
+}
+
+.suggestionTitle:hover {
+  background: #fffaf8;
+}
+
+.productGrid {
+  display: grid;
+
+  padding-top: 12px;
+
+  grid-template-columns:
+    repeat(6, 1fr);
+
+  gap: 10px;
+}
+
+.moreWrapper {
+  display: flex;
+
+  padding: 25px 0;
+
+  justify-content: center;
+}
+
+.moreWrapper button {
+  width: 320px;
+  height: 40px;
+
+  color: #555;
+  background: #fff;
+
+  border: 1px solid #ddd;
+
+  cursor: pointer;
+}
+
+.moreWrapper button:hover {
+  color: #ee4d2d;
+  border-color: #ee4d2d;
+}
+
+.state {
+  display: flex;
+
+  min-height: 300px;
+
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  color: #777;
+}
+
+.state button {
+  padding: 9px 20px;
+
+  color: #fff;
+  background: #ee4d2d;
+
+  border: 0;
+
+  cursor: pointer;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 1000px) {
+  .heroGrid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .sideBanners {
+    display: none;
+  }
+
+  .mainBanner {
+    min-height: 230px;
+  }
+
+  .categoryGrid {
+    grid-template-columns:
+      repeat(5, 1fr);
+  }
+
+  .flashGrid,
+  .topSearchGrid,
+  .productGrid {
+    grid-template-columns:
+      repeat(3, 1fr);
+  }
+
+  .mallBody {
+    grid-template-columns: 1fr;
+  }
+
+  .mallBanner {
+    min-height: 250px;
+  }
+}
+
+@media (max-width: 700px) {
+  .shortcuts {
+    overflow-x: auto;
+
+    grid-template-columns:
+      repeat(6, 110px);
+  }
+
+  .categoryGrid {
+    grid-template-columns:
+      repeat(4, 1fr);
+  }
+
+  .flashGrid,
+  .topSearchGrid,
+  .productGrid {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .mallGrid {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .mallHeader span {
+    display: none;
+  }
+
+  .mainBanner h1 {
+    font-size: 45px;
+  }
+
+  .heroBadge {
+    display: none;
+  }
+}

@@ -1,12 +1,16 @@
 .header {
-  position: relative;
-  z-index: 20;
   color: #fff;
   background: linear-gradient(
     -180deg,
     #f53d2d,
     #f63
   );
+}
+
+.stickyHeader {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .container {

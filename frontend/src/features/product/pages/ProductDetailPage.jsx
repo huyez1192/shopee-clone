@@ -48,6 +48,8 @@ function ProductDetailPage() {
 
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
+  const [isBuyingNow, setIsBuyingNow] = useState(false);
+
   const [actionError, setActionError] = useState("");
 
   const [successMessage, setSuccessMessage] = useState("");
@@ -271,28 +273,70 @@ function ProductDetailPage() {
     return true;
   }
 
-  function handleAddToCart() {
+  async function handleBuyNow() {
+    setActionError("");
+    setSuccessMessage("");
+
     if (!validateVariantSelection()) {
       return;
     }
 
-    console.log(
-      "Thêm vào giỏ:",
-      selectedVariant,
-      quantity,
-    );
-  }
+    if (!isAuthenticated) {
+      const redirectPath =
+        `${location.pathname}${location.search}`;
 
-  function handleBuyNow() {
-    if (!validateVariantSelection()) {
+      navigate("/login", {
+        state: {
+          redirectPath,
+        },
+      });
+
       return;
     }
 
-    console.log(
-      "Mua ngay:",
-      selectedVariant,
-      quantity,
-    );
+    try {
+      setIsBuyingNow(true);
+
+      const response = await addCartItem({
+        variantId: selectedVariant.id,
+        quantity,
+      });
+
+      /*
+       * Tùy API addCartItem đang trả về:
+       * - trực tiếp CartItem
+       * - hoặc Cart có items
+       */
+      const cartItemId =
+        response?.id ??
+        response?.item?.id ??
+        response?.items?.find(
+          (item) =>
+            Number(item.variantId) ===
+            Number(selectedVariant.id),
+        )?.id;
+
+      if (!cartItemId) {
+        throw new Error(
+          "Không xác định được sản phẩm trong giỏ hàng.",
+        );
+      }
+
+      navigate("/checkout", {
+        state: {
+          cartItemIds: [cartItemId],
+        },
+      });
+    } catch (error) {
+      setActionError(
+        getApiErrorMessage(
+          error,
+          "Không thể mua sản phẩm ngay.",
+        ),
+      );
+    } finally {
+      setIsBuyingNow(false);
+    }
   }
 
 
@@ -403,7 +447,7 @@ function ProductDetailPage() {
               <span className={styles.metaDivider} />
 
               <span>
-                {product.variantCount} phân loại
+                {product.variantCount - 1} phân loại
               </span>
 
               <span className={styles.metaDivider} />
@@ -549,9 +593,14 @@ function ProductDetailPage() {
                 type="button"
                 className={styles.buyNowButton}
                 onClick={handleBuyNow}
-                disabled={Number(product.totalStock) <= 0}
+                disabled={
+                  Number(product.totalStock) <= 0 ||
+                  isBuyingNow
+                }
               >
-                Mua Ngay
+                {isBuyingNow
+                  ? "Đang xử lý..."
+                  : "Mua Ngay"}
               </button>
 
               {successMessage && (
