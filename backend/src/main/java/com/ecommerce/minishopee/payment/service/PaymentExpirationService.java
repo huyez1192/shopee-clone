@@ -3,25 +3,38 @@ package com.ecommerce.minishopee.payment.service;
 import com.ecommerce.minishopee.order.entity.Order;
 import com.ecommerce.minishopee.order.entity.OrderItem;
 import com.ecommerce.minishopee.order.enums.OrderStatus;
+import com.ecommerce.minishopee.order.repository.OrderRepository;
 import com.ecommerce.minishopee.payment.entity.Payment;
 import com.ecommerce.minishopee.payment.enums.PaymentSessionStatus;
 import com.ecommerce.minishopee.payment.repository.PaymentRepository;
 import com.ecommerce.minishopee.product.entity.ProductVariant;
 import com.ecommerce.minishopee.product.enums.ProductVariantStatus;
+import com.ecommerce.minishopee.product.repository.ProductVariantRepository;
+import com.ecommerce.minishopee.common.exception.BadRequestException;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Service
 public class PaymentExpirationService {
 
     private final PaymentRepository paymentRepository;
+    private final OrderRepository orderRepository;
+    private final ProductVariantRepository productVariantRepository;
 
-    public PaymentExpirationService(PaymentRepository paymentRepository) {
+    public PaymentExpirationService(
+            PaymentRepository paymentRepository,
+            OrderRepository orderRepository,
+            ProductVariantRepository productVariantRepository
+    ) {
         this.paymentRepository = paymentRepository;
+        this.orderRepository = orderRepository;
+        this.productVariantRepository = productVariantRepository;
     }
 
     public List<Long> findExpiredPaymentIds() {
@@ -58,15 +71,12 @@ public class PaymentExpirationService {
             return;
         }
 
-        /*
-         * Đánh dấu Payment hết hạn.
-         */
-        payment.setStatus(PaymentSessionStatus.EXPIRED);
+        List<Order> lockedOrders = orderRepository
+                .findAllByPaymentIdForUpdateOrdered(payment.getId());
 
-        /*
-         * Hủy từng Order và hoàn lại stock.
-         */
-        for (Order order : payment.getOrders()) {
+        Map<Long, Integer> quantityByVariantId = new LinkedHashMap<>();
+
+        for (Order order : lockedOrders) {
 
             /*
              * SEPAY chưa thanh toán thì seller
@@ -79,30 +89,59 @@ public class PaymentExpirationService {
                 continue;
             }
 
-            restoreStock(order);
+            for (OrderItem item : order.getItems()) {
+                if (item.getProductVariant() != null) {
+                    quantityByVariantId.merge(
+                            item.getProductVariant().getId(),
+                            item.getQuantity(),
+                            Integer::sum
+                    );
+                }
+            }
+        }
+
+        restoreStock(quantityByVariantId);
+
+        LocalDateTime cancelledAt = LocalDateTime.now();
+
+        for (Order order : lockedOrders) {
+            if (order.getStatus() != OrderStatus.PENDING) {
+                continue;
+            }
 
             order.setStatus(OrderStatus.CANCELLED);
 
-            order.setCancelledAt(LocalDateTime.now());
+            order.setCancelledAt(cancelledAt);
 
             order.setCancelReason(
                     "Phiên thanh toán SePay đã hết hạn."
             );
         }
 
+        payment.setStatus(PaymentSessionStatus.EXPIRED);
+
         paymentRepository.save(payment);
+        orderRepository.saveAll(lockedOrders);
     }
 
-    private void restoreStock(
-            Order order
-    ) {
-        for (OrderItem item : order.getItems()) {
-            ProductVariant variant =
-                    item.getProductVariant();
+    private void restoreStock(Map<Long, Integer> quantityByVariantId) {
+        if (quantityByVariantId.isEmpty()) {
+            return;
+        }
 
-            if (variant == null) {
-                continue;
-            }
+        List<Long> sortedVariantIds = quantityByVariantId.keySet()
+                .stream()
+                .sorted()
+                .toList();
+
+        List<ProductVariant> lockedVariants = productVariantRepository
+                .findAllByIdsForUpdateOrdered(sortedVariantIds);
+
+        if (lockedVariants.size() != sortedVariantIds.size()) {
+            throw new BadRequestException("Không tìm thấy đầy đủ SKU cần hoàn tồn kho.");
+        }
+
+        for (ProductVariant variant : lockedVariants) {
 
             int currentStock =
                     variant.getStockQuantity() == null
@@ -111,7 +150,7 @@ public class PaymentExpirationService {
 
             int restoredStock =
                     currentStock
-                            + item.getQuantity();
+                            + quantityByVariantId.get(variant.getId());
 
             variant.setStockQuantity(
                     restoredStock
@@ -135,5 +174,7 @@ public class PaymentExpirationService {
                 );
             }
         }
+
+        productVariantRepository.saveAll(lockedVariants);
     }
 }

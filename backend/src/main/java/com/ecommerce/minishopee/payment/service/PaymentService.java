@@ -140,42 +140,13 @@ public class PaymentService {
     }
 
     private String generateUniquePaymentCode() {
-        String paymentCode;
+        String timestamp = LocalDateTime.now().format(PAYMENT_CODE_TIME_FORMAT);
+        String randomPart = UUID.randomUUID()
+                .toString()
+                .replace("-", "")
+                .toUpperCase(Locale.ROOT);
 
-        do {
-            String timestamp =
-                    LocalDateTime.now()
-                            .format(
-                                    PAYMENT_CODE_TIME_FORMAT
-                            );
-
-            String randomPart =
-                    UUID.randomUUID()
-                            .toString()
-                            .replace("-", "")
-                            .substring(0, 6)
-                            .toUpperCase(
-                                    Locale.ROOT
-                            );
-
-            /*
-             * MSP = prefix SePay.
-             *
-             * Không dùng dấu "-" để việc
-             * nhận diện payment code dễ hơn.
-             */
-            paymentCode =
-                    "MS"
-                            + timestamp
-                            + randomPart;
-
-        } while (
-                paymentRepository
-                        .existsByPaymentCode(
-                                paymentCode
-                        )
-        );
-
-        return paymentCode;
+        // Giữ prefix/format không dấu; tổng chiều dài 48, trong giới hạn cột 50.
+        return "MS" + timestamp + randomPart;
     }
 }

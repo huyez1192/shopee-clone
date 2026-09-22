@@ -13,7 +13,15 @@ import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    boolean existsByOrderCode(String orderCode);
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT o
+            FROM Order o
+            WHERE o.payment.id = :paymentId
+            ORDER BY o.id ASC
+            """)
+    List<Order> findAllByPaymentIdForUpdateOrdered(@Param("paymentId") Long paymentId);
+
     // =====================================================
     // BUYER ORDER
     // =====================================================

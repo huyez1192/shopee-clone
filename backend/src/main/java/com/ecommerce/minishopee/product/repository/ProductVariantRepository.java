@@ -35,4 +35,15 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
         WHERE pv.id = :variantId
         """)
     Optional<ProductVariant> findByIdForUpdate(@Param("variantId") Long variantId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+        SELECT pv
+        FROM ProductVariant pv
+        WHERE pv.id IN :variantIds
+        ORDER BY pv.id ASC
+        """)
+    List<ProductVariant> findAllByIdsForUpdateOrdered(
+            @Param("variantIds") Collection<Long> variantIds
+    );
 }

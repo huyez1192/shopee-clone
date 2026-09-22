@@ -784,44 +784,14 @@ public class OrderService {
      * Sinh mã Order duy nhất.
      */
     private String generateUniqueOrderCode() {
-        String orderCode;
+        String timestamp = LocalDateTime.now().format(ORDER_CODE_TIME_FORMAT);
+        String randomPart = UUID.randomUUID()
+                .toString()
+                .replace("-", "")
+                .toUpperCase(Locale.ROOT);
 
-        do {
-            String timestamp =
-                    LocalDateTime.now()
-                            .format(
-                                    ORDER_CODE_TIME_FORMAT
-                            );
-
-            String randomPart =
-                    UUID.randomUUID()
-                            .toString()
-                            .replace(
-                                    "-",
-                                    ""
-                            )
-                            .substring(
-                                    0,
-                                    8
-                            )
-                            .toUpperCase(
-                                    Locale.ROOT
-                            );
-
-            orderCode =
-                    "MS-"
-                            + timestamp
-                            + "-"
-                            + randomPart;
-
-        } while (
-                orderRepository
-                        .existsByOrderCode(
-                                orderCode
-                        )
-        );
-
-        return orderCode;
+        // 3 + 14 + 1 + 32 = 50 ký tự, vừa với giới hạn cột order_code.
+        return "MS-" + timestamp + "-" + randomPart;
     }
 
     /*
