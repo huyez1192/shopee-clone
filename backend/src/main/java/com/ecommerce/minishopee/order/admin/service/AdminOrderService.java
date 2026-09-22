@@ -15,6 +15,7 @@ import com.ecommerce.minishopee.common.exception.BadRequestException;
 import com.ecommerce.minishopee.order.exception.OrderNotFoundException;
 import com.ecommerce.minishopee.order.mapper.OrderMapper;
 import com.ecommerce.minishopee.order.repository.OrderRepository;
+import com.ecommerce.minishopee.order.service.OrderPaymentPolicy;
 import com.ecommerce.minishopee.product.repository.ProductVariantRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,13 +31,16 @@ public class AdminOrderService {
 
     private final OrderRepository orderRepository;
     private final ProductVariantRepository productVariantRepository;
+    private final OrderPaymentPolicy orderPaymentPolicy;
 
     public AdminOrderService(
         OrderRepository orderRepository,
-        ProductVariantRepository productVariantRepository
+        ProductVariantRepository productVariantRepository,
+        OrderPaymentPolicy orderPaymentPolicy
     ) {
         this.orderRepository = orderRepository;
         this.productVariantRepository = productVariantRepository;
+        this.orderPaymentPolicy = orderPaymentPolicy;
     }
 
     // Admin xem, tìm kiếm và lọc toàn bộ Order.
@@ -110,6 +114,7 @@ public class AdminOrderService {
     ) {
         Order order = findOrderForUpdate(orderId);
 
+        orderPaymentPolicy.validateCanCancelIndividually(order);
         validateAdminCanCancel(order);
 
         restoreOrderStock(order);
@@ -166,6 +171,8 @@ public class AdminOrderService {
             throw new BadRequestException("Chỉ có thể chuyển đơn PENDING sang CONFIRMED.");
         }
 
+        orderPaymentPolicy.validateCanFulfill(order);
+
         order.setStatus(OrderStatus.CONFIRMED);
 
         order.setConfirmedAt(LocalDateTime.now());
@@ -179,6 +186,8 @@ public class AdminOrderService {
             throw new BadRequestException("Chỉ có thể chuyển đơn CONFIRMED sang SHIPPING.");
         }
 
+        orderPaymentPolicy.validateCanFulfill(order);
+
         order.setStatus(OrderStatus.SHIPPING);
 
         order.setShippedAt(LocalDateTime.now());
@@ -189,6 +198,8 @@ public class AdminOrderService {
         if (order.getStatus() != OrderStatus.SHIPPING) {
             throw new BadRequestException("Chỉ có thể chuyển đơn SHIPPING sang COMPLETED.");
         }
+
+        orderPaymentPolicy.validateCanFulfill(order);
 
         order.setStatus(OrderStatus.COMPLETED);
 

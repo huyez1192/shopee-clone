@@ -18,12 +18,11 @@ import com.ecommerce.minishopee.order.exception.OrderNotFoundException;
 import com.ecommerce.minishopee.shop.exception.ShopNotFoundException;
 import com.ecommerce.minishopee.order.mapper.OrderMapper;
 import com.ecommerce.minishopee.order.repository.OrderRepository;
+import com.ecommerce.minishopee.order.service.OrderPaymentPolicy;
 import com.ecommerce.minishopee.product.repository.ProductVariantRepository;
 import com.ecommerce.minishopee.shop.repository.ShopRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.ecommerce.minishopee.order.enums.PaymentMethod;
-import com.ecommerce.minishopee.order.enums.PaymentStatus;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -37,15 +36,18 @@ public class SellerOrderService {
     private final OrderRepository orderRepository;
     private final ShopRepository shopRepository;
     private final ProductVariantRepository productVariantRepository;
+    private final OrderPaymentPolicy orderPaymentPolicy;
 
     public SellerOrderService(
             OrderRepository orderRepository,
             ShopRepository shopRepository,
-            ProductVariantRepository productVariantRepository
+            ProductVariantRepository productVariantRepository,
+            OrderPaymentPolicy orderPaymentPolicy
     ) {
         this.orderRepository = orderRepository;
         this.shopRepository = shopRepository;
         this.productVariantRepository = productVariantRepository;
+        this.orderPaymentPolicy = orderPaymentPolicy;
     }
 
     /*
@@ -99,7 +101,7 @@ public class SellerOrderService {
             throw new BadRequestException("Chỉ có thể xác nhận đơn hàng đang ở trạng thái PENDING.");
         }
 
-        validateOrderCanBeConfirmed(order);
+        orderPaymentPolicy.validateCanFulfill(order);
 
         order.setStatus(OrderStatus.CONFIRMED);
 
@@ -120,6 +122,8 @@ public class SellerOrderService {
         if (order.getStatus() != OrderStatus.CONFIRMED) {
             throw new BadRequestException("Chỉ có thể giao đơn hàng đang ở trạng thái CONFIRMED.");
         }
+
+        orderPaymentPolicy.validateCanFulfill(order);
 
         order.setStatus(OrderStatus.SHIPPING);
 
@@ -145,6 +149,8 @@ public class SellerOrderService {
         if (order.getStatus() != OrderStatus.SHIPPING) {
             throw new BadRequestException("Chỉ có thể hoàn thành đơn hàng đang ở trạng thái SHIPPING.");
         }
+
+        orderPaymentPolicy.validateCanFulfill(order);
 
         order.setStatus(OrderStatus.COMPLETED);
 
@@ -179,6 +185,7 @@ public class SellerOrderService {
 
         Order order = findSellerOrderForUpdate(orderId, shop.getId());
 
+        orderPaymentPolicy.validateCanCancelIndividually(order);
         validateSellerCanCancel(order);
 
         restoreOrderStock(order);
@@ -296,18 +303,4 @@ public class SellerOrderService {
         productVariantRepository.saveAll(restoredVariants);
     }
 
-    private void validateOrderCanBeConfirmed(
-            Order order
-    ) {
-        if (
-                order.getPaymentMethod()
-                        == PaymentMethod.SEPAY
-                        && order.getPaymentStatus()
-                        != PaymentStatus.PAID
-        ) {
-            throw new BadRequestException(
-                    "Đơn hàng SePay chưa được thanh toán."
-            );
-        }
-    }
 }

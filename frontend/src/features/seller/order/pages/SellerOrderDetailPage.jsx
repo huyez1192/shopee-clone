@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 
 import fallbackProductImage from "../../../../assets/images/product-placeholder.png";
 import { queryKeys } from "../../../../query/queryKeys";
+import { getApiErrorMessage } from "../../../../utils/getApiErrorMessage";
 
 import {
   completeSellerOrder,
@@ -133,11 +134,7 @@ function SellerOrderDetailPage() {
         action,
       });
     } catch (error) {
-      alert(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Không thể cập nhật đơn hàng.",
-      );
+      alert(getApiErrorMessage(error, "Không thể cập nhật đơn hàng."));
     }
   }
 
@@ -175,8 +172,7 @@ function SellerOrderDetailPage() {
 
   const waitingForPayment =
     order.paymentMethod === "SEPAY" &&
-    order.paymentStatus !== "PAID" &&
-    order.status === "PENDING";
+    order.paymentStatus !== "PAID";
 
   const timelineSteps = getTimelineSteps(order);
 
@@ -478,7 +474,7 @@ function SellerOrderDetailPage() {
                   </button>
                 )}
 
-              {order.status === "CONFIRMED" && (
+              {!waitingForPayment && order.status === "CONFIRMED" && (
                 <button
                   type="button"
                   disabled={isProcessing}
@@ -493,7 +489,7 @@ function SellerOrderDetailPage() {
                 </button>
               )}
 
-              {order.status === "SHIPPING" && (
+              {!waitingForPayment && order.status === "SHIPPING" && (
                 <button
                   type="button"
                   disabled={isProcessing}

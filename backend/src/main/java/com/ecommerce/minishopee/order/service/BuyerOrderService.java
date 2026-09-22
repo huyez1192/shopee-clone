@@ -28,10 +28,16 @@ public class BuyerOrderService {
 
     private final OrderRepository orderRepository;
     private final ProductVariantRepository productVariantRepository;
+    private final OrderPaymentPolicy orderPaymentPolicy;
 
-    public BuyerOrderService(OrderRepository orderRepository, ProductVariantRepository productVariantRepository) {
+    public BuyerOrderService(
+            OrderRepository orderRepository,
+            ProductVariantRepository productVariantRepository,
+            OrderPaymentPolicy orderPaymentPolicy
+    ) {
         this.orderRepository = orderRepository;
         this.productVariantRepository = productVariantRepository;
+        this.orderPaymentPolicy = orderPaymentPolicy;
     }
 
     /*
@@ -86,6 +92,7 @@ public class BuyerOrderService {
         Order order = orderRepository.findOwnedOrderByIdForUpdate(orderId, currentUser.getId())
                         .orElseThrow(() -> new OrderNotFoundException(orderId));
 
+        orderPaymentPolicy.validateCanCancelIndividually(order);
         validateBuyerCanCancel(order);
 
         /*
