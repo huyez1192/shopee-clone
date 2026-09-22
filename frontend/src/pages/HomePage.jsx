@@ -1,15 +1,13 @@
-import {useCallback, useEffect, useMemo, useState, useRef,} from "react";
-
-import {Link, useNavigate,} from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useNavigate } from "react-router-dom";
 
 import ProductCard from "../features/product/components/ProductCard";
-
-import {getProducts, } from "../features/product/api/productApi";
-
-import {getCategories, } from "../features/category/api/categoryApi";
+import { getProducts } from "../features/product/api/productApi";
+import { getCategories } from "../features/category/api/categoryApi";
+import { queryKeys } from "../query/queryKeys";
 
 import fallbackProductImage from "../assets/images/product-placeholder.png";
-
 import styles from "./HomePage.module.css";
 
 import bannerMain1 from "../assets/images/home/banner01.jpg";
@@ -50,41 +48,15 @@ import jewelryImage from "../assets/images/categories/jewelry.jpg";
 import foodImage from "../assets/images/categories/food.jpg";
 import booksImage from "../assets/images/categories/books.jpg";
 
-const MAIN_BANNERS = [
-  bannerMain1,
-  bannerMain2,
-  bannerMain3,
-  bannerMain4,
-  bannerMain5,
-];
+const MAIN_BANNERS = [bannerMain1, bannerMain2, bannerMain3, bannerMain4, bannerMain5];
 
 const SHORTCUTS = [
-  {
-    image: loyalCustomerImage,
-    title: "Siêu Hội",
-    subtitle: "Thành Viên",
-  },
-  {
-    image: dealImage,
-    title: "Deal Từ 1.000D",
-  },
-  {
-    image: shopeeProcessingImage,
-    title: "Shopee Xử Lý",
-  },
-  {
-    image: shopeeHomeImage,
-    title: "Shopee Home",
-  },
-  {
-    image: discountCodeImage,
-    title: "Mã Giảm Giá",
-  },
-  {
-    image: phoneTopUpAndBillImage,
-    title: "Nạp Điện Thoại",
-    subtitle: "& Hóa Đơn",
-  },
+  { image: loyalCustomerImage, title: "Siêu Hội", subtitle: "Thành Viên" },
+  { image: dealImage, title: "Deal Từ 1.000D" },
+  { image: shopeeProcessingImage, title: "Shopee Xử Lý" },
+  { image: shopeeHomeImage, title: "Shopee Home" },
+  { image: discountCodeImage, title: "Mã Giảm Giá" },
+  { image: phoneTopUpAndBillImage, title: "Nạp Điện Thoại", subtitle: "& Hóa Đơn" },
 ];
 
 const CATEGORY_IMAGES = [
@@ -111,119 +83,61 @@ const CATEGORY_IMAGES = [
 ];
 
 function formatPrice(value) {
-  return new Intl.NumberFormat(
-    "vi-VN",
-  ).format(Number(value) || 0);
+  return new Intl.NumberFormat("vi-VN").format(Number(value) || 0);
 }
 
 function HomePage() {
-
   const [bannerIndex, setBannerIndex] = useState(0);
-
   const [enableTransition, setEnableTransition] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(24);
 
   const timerRef = useRef(null);
-
-  const carouselBanners = [
-      ...MAIN_BANNERS,
-      MAIN_BANNERS[0],
-  ];
-
   const navigate = useNavigate();
+  const carouselBanners = [...MAIN_BANNERS, MAIN_BANNERS[0]];
 
-  const [products, setProducts] = useState([]);
+  const {
+    data: products = [],
+    isLoading: isProductsLoading,
+    error: productError,
+    refetch: refetchProducts,
+  } = useQuery({
+    queryKey: queryKeys.products.all,
+    queryFn: getProducts,
+    select: (response) => Array.isArray(response) ? response : response?.content || [],
+  });
 
-  const [categories, setCategories] = useState([]);
+  const {
+    data: categories = [],
+    isLoading: isCategoriesLoading,
+    error: categoryError,
+    refetch: refetchCategories,
+  } = useQuery({
+    queryKey: queryKeys.categories.all,
+    queryFn: getCategories,
+    select: (response) => Array.isArray(response) ? response : response?.content || [],
+  });
 
-  const [isLoading, setIsLoading] = useState(true);
-
-  const [errorMessage, setErrorMessage] = useState("");
-
-  const [visibleCount, setVisibleCount] = useState(24);
+  const isLoading = isProductsLoading || isCategoriesLoading;
+  const queryError = productError || categoryError;
+  const errorMessage = queryError ? queryError?.response?.data?.message || "Không thể tải dữ liệu trang chủ." : "";
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
-      setBannerIndex(
-        (currentIndex) => currentIndex + 1,
-      );
+      setBannerIndex((currentIndex) => currentIndex + 1);
     }, 3000);
 
-    return () => {
-      clearInterval(timerRef.current);
-    };
+    return () => clearInterval(timerRef.current);
   }, []);
 
-  const loadHome = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setErrorMessage("");
+  const flashSaleProducts = useMemo(() => products.slice(0, 6), [products]);
+  const mallProducts = useMemo(() => products.slice(6, 14), [products]);
+  const topProducts = useMemo(() => products.slice(0, 6), [products]);
+  const suggestedProducts = useMemo(() => products.slice(0, visibleCount), [products, visibleCount]);
 
-      const [
-        productResponse,
-        categoryResponse,
-      ] = await Promise.all([
-        getProducts(),
-        getCategories(),
-      ]);
-
-      setProducts(
-        Array.isArray(productResponse)
-          ? productResponse
-          : productResponse?.content || [],
-      );
-
-      setCategories(
-        Array.isArray(categoryResponse)
-          ? categoryResponse
-          : categoryResponse?.content || [],
-      );
-    } catch (error) {
-      console.error(error);
-
-      setErrorMessage(
-        error?.response?.data?.message ||
-          "Không thể tải dữ liệu trang chủ.",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadHome();
-  }, [loadHome]);
-
-  const flashSaleProducts =
-    useMemo(
-      () => products.slice(0, 6),
-      [products],
-    );
-
-  const mallProducts =
-    useMemo(
-      () => products.slice(6, 14),
-      [products],
-    );
-
-  const topProducts =
-    useMemo(
-      () => products.slice(0, 6),
-      [products],
-    );
-
-  const suggestedProducts =
-    useMemo(
-      () =>
-        products.slice(
-          0,
-          visibleCount,
-        ),
-      [
-        products,
-        visibleCount,
-      ],
-    );
-
+  function loadHome() {
+    refetchProducts();
+    refetchCategories();
+  }
 
   function handleBannerTransitionEnd() {
     if (bannerIndex === MAIN_BANNERS.length) {
@@ -251,22 +165,13 @@ function HomePage() {
               className={styles.bannerTrack}
               style={{
                 transform: `translateX(-${bannerIndex * 100}%)`,
-                transition: enableTransition
-                  ? "transform 0.6s ease"
-                  : "none",
+                transition: enableTransition ? "transform 0.6s ease" : "none",
               }}
               onTransitionEnd={handleBannerTransitionEnd}
             >
               {carouselBanners.map((banner, index) => (
-                <Link
-                  key={index}
-                  to="/products"
-                  className={styles.bannerSlide}
-                >
-                  <img
-                    src={banner}
-                    alt={`Banner ${index + 1}`}
-                  />
+                <Link key={index} to="/products" className={styles.bannerSlide}>
+                  <img src={banner} alt={`Banner ${index + 1}`} />
                 </Link>
               ))}
             </div>
@@ -277,12 +182,7 @@ function HomePage() {
                 <button
                   key={index}
                   type="button"
-                  className={
-                    index ===
-                    bannerIndex % MAIN_BANNERS.length
-                      ? styles.activeDot
-                      : styles.dot
-                  }
+                  className={index === bannerIndex % MAIN_BANNERS.length ? styles.activeDot : styles.dot}
                   onClick={() => {
                     setEnableTransition(true);
                     setBannerIndex(index);
@@ -295,24 +195,12 @@ function HomePage() {
           {/* ================= 2 BANNER PHẢI ================= */}
 
           <div className={styles.sideBanners}>
-            <Link
-              to="/products"
-              className={styles.sideBannerImage}
-            >
-              <img
-                src={bannerRightTop}
-                alt="Banner khuyến mãi"
-              />
+            <Link to="/products" className={styles.sideBannerImage}>
+              <img src={bannerRightTop} alt="Banner khuyến mãi" />
             </Link>
 
-            <Link
-              to="/products"
-              className={styles.sideBannerImage}
-            >
-              <img
-                src={bannerRightBottom}
-                alt="Banner ưu đãi"
-              />
+            <Link to="/products" className={styles.sideBannerImage}>
+              <img src={bannerRightBottom} alt="Banner ưu đãi" />
             </Link>
           </div>
         </div>
@@ -321,16 +209,9 @@ function HomePage() {
 
         <div className={styles.shortcuts}>
           {SHORTCUTS.map((item) => (
-            <Link
-              key={`${item.title}-${item.subtitle || ""}`}
-              to="/products"
-              className={styles.shortcut}
-            >
+            <Link key={`${item.title}-${item.subtitle || ""}`} to="/products" className={styles.shortcut}>
               <div className={styles.shortcutIcon}>
-                <img
-                  src={item.image}
-                  alt={item.title}
-                />
+                <img src={item.image} alt={item.title} />
               </div>
 
               <span>
@@ -351,284 +232,156 @@ function HomePage() {
       <div className={styles.homeContainer}>
         {/* ================= CATEGORY ================= */}
 
-        <section
-          className={styles.section}
-        >
-          <div
-            className={
-              styles.sectionTitle
-            }
-          >
-            DANH MỤC
-          </div>
+        <section className={styles.section}>
+          <div className={styles.sectionTitle}>DANH MỤC</div>
 
-          <div
-            className={
-              styles.categoryGrid
-            }
-          >
-            {categories
-              .slice(0, 20)
-              .map((category,index,) => (
-                  <Link
-                    key={category.id}
-                    to={`/products?categoryId=${category.id}&page=1`}
-                    className={styles.categoryItem}
-                  >
-                    <div className={styles.categoryImage}>
-                      <img
-                        src={
-                          CATEGORY_IMAGES[
-                            index % CATEGORY_IMAGES.length
-                          ]
-                        }
-                        alt={category.name}
-                      />
-                    </div>
+          <div className={styles.categoryGrid}>
+            {categories.slice(0, 20).map((category, index) => (
+              <Link
+                key={category.id}
+                to={`/products?categoryId=${category.id}&page=1`}
+                className={styles.categoryItem}
+              >
+                <div className={styles.categoryImage}>
+                  <img
+                    src={CATEGORY_IMAGES[index % CATEGORY_IMAGES.length]}
+                    alt={category.name}
+                  />
+                </div>
 
-                    <span>
-                      {category.name}
-                    </span>
-                  </Link>
-                ),
-              )}
+                <span>{category.name}</span>
+              </Link>
+            ))}
           </div>
         </section>
 
         {/* ================= FLASH SALE ================= */}
 
-        <section
-          className={`${styles.section} ${styles.flashSection}`}
-        >
-          <div
-            className={styles.sectionHeader}
-          >
-            <h2
-              className={styles.flashTitle}
-            >
-              ⚡ FLASH SALE
-            </h2>
+        <section className={`${styles.section} ${styles.flashSection}`}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.flashTitle}>⚡ FLASH SALE</h2>
 
-            <Link to="/products">
-              Xem tất cả ›
-            </Link>
+            <Link to="/products">Xem tất cả ›</Link>
           </div>
 
-          <div
-            className={styles.flashGrid}
-          >
-            {flashSaleProducts.map((product,index,) => (
-                <Link
-                  key={product.id}
-                  to={`/products/${product.id}`}
-                  className={styles.flashCard}
-                >
-                  <div
-                    className={styles.flashImageWrapper}
-                  >
-                    <img
-                      src={
-                        product.imageUrl ||
-                        fallbackProductImage
-                      }
-                      alt={product.name}
-                      onError={(event,) => {
-                        event.currentTarget.src =
-                          fallbackProductImage;
-                      }}
-                    />
+          <div className={styles.flashGrid}>
+            {flashSaleProducts.map((product, index) => (
+              <Link
+                key={product.id}
+                to={`/products/${product.id}`}
+                className={styles.flashCard}
+              >
+                <div className={styles.flashImageWrapper}>
+                  <img
+                    src={product.imageUrl || fallbackProductImage}
+                    alt={product.name}
+                    onError={(event) => {
+                      event.currentTarget.src = fallbackProductImage;
+                    }}
+                  />
 
-                    <span className={styles.discount} >
-                      -
-                      {[
-                        25,
-                        35,
-                        45,
-                        50,
-                        40,
-                        30,
-                      ][
-                        index %
-                          6
-                      ]}
-                      %
-                    </span>
-                  </div>
+                  <span className={styles.discount}>
+                    -{[25, 35, 45, 50, 40, 30][index % 6]}%
+                  </span>
+                </div>
 
-                  <strong>
-                    ₫ {formatPrice(product.minPrice,)}
-                  </strong>
+                <strong>₫ {formatPrice(product.minPrice)}</strong>
 
-                  <div
-                    className={styles.flashProgress}
-                  >
-                    <span>
-                      ĐANG BÁN CHẠY
-                    </span>
-                  </div>
-                </Link>
-              ),
-            )}
+                <div className={styles.flashProgress}>
+                  <span>ĐANG BÁN CHẠY</span>
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
 
         {/* ================= MALL ================= */}
 
-        <section
-          className={`${styles.section} ${styles.mallSection}`}
-        >
-          <div
-            className={
-              styles.mallHeader
-            }
-          >
+        <section className={`${styles.section} ${styles.mallSection}`}>
+          <div className={styles.mallHeader}>
             <div>
-              <strong>
-                SHOPEE MALL
-              </strong>
+              <strong>SHOPEE MALL</strong>
 
-              <span>
-                ✓ Trả Hàng Miễn Phí 15 Ngày
-              </span>
+              <span>✓ Trả Hàng Miễn Phí 15 Ngày</span>
 
-              <span>
-                ✓ Hàng Chính Hãng 100%
-              </span>
+              <span>✓ Hàng Chính Hãng 100%</span>
 
-              <span>
-                🚚 Miễn Phí Vận Chuyển
-              </span>
+              <span>🚚 Miễn Phí Vận Chuyển</span>
             </div>
 
-            <Link to="/products">
-              Xem tất cả ›
-            </Link>
+            <Link to="/products">Xem tất cả ›</Link>
           </div>
 
           <div className={styles.mallBody}>
-            <Link
-              to="/products"
-              className={styles.mallBanner}
-            >
-              <img
-                src={mallBannerImage}
-                alt="Shopee Mall Banner"
-              />
+            <Link to="/products" className={styles.mallBanner}>
+              <img src={mallBannerImage} alt="Shopee Mall Banner" />
             </Link>
 
-            <div
-              className={styles.mallGrid}
-            >
-              {mallProducts.map(
-                (product, index,) => (
-                  <Link
-                    key={product.id}
-                    to={`/products/${product.id}`}
-                    className={styles.mallItem}
-                  >
-                    <img
-                      src={
-                        product.imageUrl ||
-                        fallbackProductImage
-                      }
-                      alt={product.name}
-                      onError={(
-                        event,
-                      ) => {
-                        event.currentTarget.src = fallbackProductImage;
-                      }}
-                    />
+            <div className={styles.mallGrid}>
+              {mallProducts.map((product, index) => (
+                <Link
+                  key={product.id}
+                  to={`/products/${product.id}`}
+                  className={styles.mallItem}
+                >
+                  <img
+                    src={product.imageUrl || fallbackProductImage}
+                    alt={product.name}
+                    onError={(event) => {
+                      event.currentTarget.src = fallbackProductImage;
+                    }}
+                  />
 
-                    <strong>
-                      {
-                        [
-                          "Ưu đãi đến 50%",
-                          "Mua 1 tặng 1",
-                          "Mua 1 được 2",
-                          "Deal siêu hot",
-                        ][
-                          index %
-                            4
-                        ]
-                      }
-                    </strong>
-                  </Link>
-                ),
-              )}
+                  <strong>
+                    {["Ưu đãi đến 50%", "Mua 1 tặng 1", "Mua 1 được 2", "Deal siêu hot"][index % 4]}
+                  </strong>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
 
         {/* ================= TOP SEARCH ================= */}
 
-        <section
-          className={styles.section}
-        >
-          <div
-            className={styles.sectionHeader}
-          >
-            <h2
-              className={styles.topSearchTitle}
-            >
-              TÌM KIẾM HÀNG ĐẦU
-            </h2>
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.topSearchTitle}>TÌM KIẾM HÀNG ĐẦU</h2>
 
-            <Link to="/products">
-              Xem tất cả ›
-            </Link>
+            <Link to="/products">Xem tất cả ›</Link>
           </div>
 
-          <div
-            className={styles.topSearchGrid}
-          >
-            {topProducts.map((product, index,) => (
-                <Link
-                  key={product.id}
-                  to={`/products/${product.id}`}
-                  className={styles.topSearchItem}
-                >
-                  <div
-                    className={styles.topImage}
-                  >
-                    <img
-                      src={
-                        product.imageUrl ||
-                        fallbackProductImage
-                      }
-                      alt={product.name}
-                      onError={(event,) => {
-                        event.currentTarget.src =
-                          fallbackProductImage;
-                      }}
-                    />
+          <div className={styles.topSearchGrid}>
+            {topProducts.map((product, index) => (
+              <Link
+                key={product.id}
+                to={`/products/${product.id}`}
+                className={styles.topSearchItem}
+              >
+                <div className={styles.topImage}>
+                  <img
+                    src={product.imageUrl || fallbackProductImage}
+                    alt={product.name}
+                    onError={(event) => {
+                      event.currentTarget.src = fallbackProductImage;
+                    }}
+                  />
 
-                    <span>
-                      TOP
-                    </span>
+                  <span>TOP</span>
 
-                    <div>
-                      Bán{" "}
-                      {index + 3}
-                      k+ / tháng
-                    </div>
+                  <div>
+                    Bán {index + 3}k+ / tháng
                   </div>
+                </div>
 
-                  <strong>
-                    {product.name}
-                  </strong>
-                </Link>
-              ),
-            )}
+                <strong>{product.name}</strong>
+              </Link>
+            ))}
           </div>
         </section>
 
         {/* ================= SUGGESTION ================= */}
 
-        <section
-          className={
-            styles.suggestionSection
-          }
-        >
+        <section className={styles.suggestionSection}>
           <button
             type="button"
             className={styles.suggestionTitle}
@@ -638,53 +391,28 @@ function HomePage() {
           </button>
 
           {isLoading ? (
-            <div
-              className={styles.state}
-            >
-              Đang tải sản phẩm...
-            </div>
+            <div className={styles.state}>Đang tải sản phẩm...</div>
           ) : errorMessage ? (
-            <div
-              className={styles.state}
-            >
-              <p>
-                {errorMessage}
-              </p>
+            <div className={styles.state}>
+              <p>{errorMessage}</p>
 
-              <button
-                type="button"
-                onClick={loadHome}
-              >
+              <button type="button" onClick={loadHome}>
                 Thử lại
               </button>
             </div>
           ) : (
             <>
-              <div
-                className={styles.productGrid}
-              >
+              <div className={styles.productGrid}>
                 {suggestedProducts.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                    />
-                  ),
-                )}
+                  <ProductCard key={product.id} product={product} />
+                ))}
               </div>
 
-              {visibleCount <
-                products.length && (
-                <div
-                  className={styles.moreWrapper}
-                >
+              {visibleCount < products.length && (
+                <div className={styles.moreWrapper}>
                   <button
                     type="button"
-                    onClick={() =>
-                      setVisibleCount((current,) =>
-                          current +
-                          12,
-                      )
-                    }
+                    onClick={() => setVisibleCount((current) => current + 12)}
                   >
                     Xem thêm
                   </button>

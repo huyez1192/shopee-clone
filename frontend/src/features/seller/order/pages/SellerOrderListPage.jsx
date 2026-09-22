@@ -1,8 +1,9 @@
-import {useCallback, useEffect, useMemo, useState, } from "react";
-
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import fallbackProductImage from "../../../../assets/images/product-placeholder.png";
+import { queryKeys } from "../../../../query/queryKeys";
 
 import {
   completeSellerOrder,
@@ -11,79 +12,89 @@ import {
   shipSellerOrder,
 } from "../api/sellerOrderApi";
 
-import {filterSellerOrders, getSellerOrderStatusLabel, SELLER_ORDER_TABS,} from "../utils/sellerOrderUtils";
+import {
+  filterSellerOrders,
+  getSellerOrderStatusLabel,
+  SELLER_ORDER_TABS,
+} from "../utils/sellerOrderUtils";
 
 import styles from "./SellerOrderListPage.module.css";
 
 function formatPrice(value) {
-  return new Intl.NumberFormat("vi-VN").format(
-    Number(value) || 0,
-  );
+  return new Intl.NumberFormat("vi-VN").format(Number(value) || 0);
 }
 
 function getPaymentLabel(order) {
   if (order.paymentMethod === "COD") {
-    return order.paymentStatus === "PAID"
-      ? "COD - Đã thanh toán"
-      : "COD - Chưa thanh toán";
+    return order.paymentStatus === "PAID" ? "COD - Đã thanh toán" : "COD - Chưa thanh toán";
   }
 
   if (order.paymentMethod === "SEPAY") {
-    return order.paymentStatus === "PAID"
-      ? "SePay - Đã thanh toán"
-      : "SePay - Chưa thanh toán";
+    return order.paymentStatus === "PAID" ? "SePay - Đã thanh toán" : "SePay - Chưa thanh toán";
   }
 
   return order.paymentMethod;
 }
 
 function SellerOrderListPage() {
-  const [orders, setOrders] = useState([]);
-  const [activeTab, setActiveTab] = useState("all");
+  const queryClient = useQueryClient();
 
+  const [activeTab, setActiveTab] = useState("all");
   const [keyword, setKeyword] = useState("");
 
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    data: orders = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: queryKeys.seller.orders.all,
+    queryFn: getSellerOrders,
+    select: (response) => Array.isArray(response) ? response : response?.content || [],
+  });
 
-  const [errorMessage, setErrorMessage] = useState("");
+  const orderActionMutation = useMutation({
+    mutationFn: async ({ orderId, action }) => {
+      if (action === "confirm") {
+        return confirmSellerOrder(orderId);
+      }
 
-  const [processingOrderId, setProcessingOrderId] = useState(null);
+      if (action === "ship") {
+        return shipSellerOrder(orderId);
+      }
 
-  const loadOrders = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setErrorMessage("");
+      if (action === "complete") {
+        return completeSellerOrder(orderId);
+      }
 
-      const response = await getSellerOrders();
+      throw new Error("Hành động đơn hàng không hợp lệ.");
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.seller.orders.all,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.orders.all,
+        }),
+      ]);
+    },
+  });
 
-      setOrders(
-        Array.isArray(response)
-          ? response
-          : response?.content || [],
-      );
-    } catch (error) {
-      console.error(error);
+  const errorMessage = error
+    ? error?.response?.data?.message || "Không thể tải danh sách đơn hàng."
+    : "";
 
-      setErrorMessage(
-        error?.response?.data?.message ||
-          "Không thể tải danh sách đơn hàng.",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const processingOrderId = orderActionMutation.isPending
+    ? orderActionMutation.variables?.orderId ?? null
+    : null;
 
-  useEffect(() => {
-    loadOrders();
-  }, [loadOrders]);
+  function loadOrders() {
+    refetch();
+  }
 
   const filteredOrders = useMemo(() => {
-    const tabOrders =
-      filterSellerOrders(
-        orders,
-        activeTab,
-      );
-
+    const tabOrders = filterSellerOrders(orders, activeTab);
     const searchValue = keyword.trim().toLowerCase();
 
     if (!searchValue) {
@@ -91,68 +102,31 @@ function SellerOrderListPage() {
     }
 
     return tabOrders.filter((order) => {
-      const orderCode =
-        order.orderCode
-          ?.toLowerCase()
-          .includes(searchValue);
+      const orderCode = order.orderCode?.toLowerCase().includes(searchValue);
+      const buyerName = order.buyerName?.toLowerCase().includes(searchValue);
+      const productName = order.items?.some((item) => item.productName?.toLowerCase().includes(searchValue));
 
-      const buyerName =
-        order.buyerName
-          ?.toLowerCase()
-          .includes(searchValue);
-
-      const productName =
-        order.items?.some((item) =>
-          item.productName
-            ?.toLowerCase()
-            .includes(searchValue),
-        );
-
-      return (
-        orderCode ||
-        buyerName ||
-        productName
-      );
+      return orderCode || buyerName || productName;
     });
-  }, [
-    orders,
-    activeTab,
-    keyword,
-  ]);
+  }, [orders, activeTab, keyword]);
 
-  async function handleAction(
-    order,
-    action,
-  ) {
+  async function handleAction(order, action) {
     try {
-      setProcessingOrderId(order.id);
-
-      if (action === "confirm") {
-        await confirmSellerOrder(order.id);
-      }
-
-      if (action === "ship") {
-        await shipSellerOrder(order.id);
-      }
-
-      if (action === "complete") {
-        await completeSellerOrder(order.id);
-      }
-
-      await loadOrders();
+      await orderActionMutation.mutateAsync({
+        orderId: order.id,
+        action,
+      });
     } catch (error) {
       alert(
         error?.response?.data?.message ||
+          error?.message ||
           "Không thể cập nhật đơn hàng.",
       );
-    } finally {
-      setProcessingOrderId(null);
     }
   }
 
   function renderMainAction(order) {
-    const processing =
-      processingOrderId === order.id;
+    const processing = processingOrderId === order.id;
 
     if (
       order.status === "PENDING" &&

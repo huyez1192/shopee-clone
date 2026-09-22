@@ -1,35 +1,26 @@
 import { useState } from "react";
-
-import {Link, useLocation, useNavigate, } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import useAuth from "../hooks/useAuth";
-
 import { getApiErrorMessage } from "../../../utils/getApiErrorMessage";
 
 import styles from "./LoginPage.module.css";
 
 function LoginPage() {
   const { login } = useAuth();
-
   const navigate = useNavigate();
-
   const location = useLocation();
 
   const redirectPath = location.state?.redirectPath || "/";
 
   const [email, setEmail] = useState("");
-
   const [password, setPassword] = useState("");
-
   const [showPassword, setShowPassword] = useState(false);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [errorMessage, setErrorMessage] = useState("");
 
   async function handleSubmit(event) {
     event.preventDefault();
-
     setErrorMessage("");
     setIsSubmitting(true);
 
@@ -39,16 +30,9 @@ function LoginPage() {
         password: password,
       });
 
-      navigate(redirectPath, {
-        replace: true,
-      });
+      navigate(redirectPath, { replace: true });
     } catch (error) {
-      setErrorMessage(
-        getApiErrorMessage(
-          error,
-          "Email hoặc mật khẩu không chính xác.",
-        ),
-      );
+      setErrorMessage(getApiErrorMessage(error, "Email hoặc mật khẩu không chính xác."));
     } finally {
       setIsSubmitting(false);
     }
@@ -58,61 +42,33 @@ function LoginPage() {
     <section className={styles.card}>
       <h1>Đăng nhập</h1>
 
-      <form
-        className={styles.form}
-        onSubmit={handleSubmit}
-      >
+      <form className={styles.form} onSubmit={handleSubmit}>
         <input
           type="email"
           value={email}
           placeholder="Email"
           autoComplete="email"
-          onChange={(event) =>
-            setEmail(event.target.value)
-          }
+          onChange={(event) => setEmail(event.target.value)}
         />
 
         <div className={styles.passwordField}>
           <input
-            type={
-              showPassword
-                ? "text"
-                : "password"
-            }
+            type={showPassword ? "text" : "password"}
             value={password}
             placeholder="Mật khẩu"
             autoComplete="current-password"
-            onChange={(event) =>
-              setPassword(event.target.value)
-            }
+            onChange={(event) => setPassword(event.target.value)}
           />
 
-          <button
-            type="button"
-            onClick={() =>
-              setShowPassword(
-                (current) => !current,
-              )
-            }
-          >
+          <button type="button" onClick={() => setShowPassword((current) => !current)}>
             {showPassword ? "Ẩn" : "Hiện"}
           </button>
         </div>
 
-        {errorMessage && (
-          <p className={styles.errorMessage}>
-            {errorMessage}
-          </p>
-        )}
+        {errorMessage && <p className={styles.errorMessage}>{errorMessage}</p>}
 
-        <button
-          type="submit"
-          className={styles.loginButton}
-          disabled={isSubmitting}
-        >
-          {isSubmitting
-            ? "ĐANG ĐĂNG NHẬP..."
-            : "ĐĂNG NHẬP"}
+        <button type="submit" className={styles.loginButton} disabled={isSubmitting}>
+          {isSubmitting ? "ĐANG ĐĂNG NHẬP..." : "ĐĂNG NHẬP"}
         </button>
 
         <div className={styles.links}>
@@ -140,15 +96,10 @@ function LoginPage() {
         </div>
 
         <p className={styles.terms}>
-          Bằng việc đăng nhập, bạn đồng ý
-          với Shopee về{" "}
-          <span>
-            Điều khoản dịch vụ
-          </span>{" "}
+          Bằng việc đăng nhập, bạn đồng ý với Shopee về{" "}
+          <span>Điều khoản dịch vụ</span>{" "}
           &{" "}
-          <span>
-            Chính sách bảo mật
-          </span>
+          <span>Chính sách bảo mật</span>
         </p>
 
         <div className={styles.register}>

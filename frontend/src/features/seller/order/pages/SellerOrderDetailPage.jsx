@@ -1,8 +1,8 @@
-import {useCallback, useEffect, useState, } from "react";
-
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 
 import fallbackProductImage from "../../../../assets/images/product-placeholder.png";
+import { queryKeys } from "../../../../query/queryKeys";
 
 import {
   completeSellerOrder,
@@ -11,14 +11,12 @@ import {
   shipSellerOrder,
 } from "../api/sellerOrderApi";
 
-import {getSellerOrderStatusLabel,} from "../utils/sellerOrderUtils";
+import { getSellerOrderStatusLabel } from "../utils/sellerOrderUtils";
 
 import styles from "./SellerOrderDetailPage.module.css";
 
 function formatPrice(value) {
-  return new Intl.NumberFormat("vi-VN").format(
-    Number(value) || 0,
-  );
+  return new Intl.NumberFormat("vi-VN").format(Number(value) || 0);
 }
 
 function formatDateTime(value) {
@@ -77,63 +75,69 @@ function getTimelineSteps(order) {
 
 function SellerOrderDetailPage() {
   const { orderId } = useParams();
+  const queryClient = useQueryClient();
 
-  const [order, setOrder] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    data: order = null,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: queryKeys.seller.orders.detail(orderId),
+    queryFn: () => getSellerOrderById(orderId),
+    enabled: Boolean(orderId),
+  });
 
-  const [errorMessage, setErrorMessage] = useState("");
-
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const loadOrder = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setErrorMessage("");
-
-      const response =
-        await getSellerOrderById(orderId);
-
-      setOrder(response);
-    } catch (error) {
-      console.error(error);
-
-      setErrorMessage(
-        error?.response?.data?.message ||
-          "Không thể tải chi tiết đơn hàng.",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [orderId]);
-
-  useEffect(() => {
-    loadOrder();
-  }, [loadOrder]);
-
-  async function handleAction(action) {
-    try {
-      setIsProcessing(true);
-
+  const orderActionMutation = useMutation({
+    mutationFn: async ({ orderId: targetOrderId, action }) => {
       if (action === "confirm") {
-        await confirmSellerOrder(order.id);
+        return confirmSellerOrder(targetOrderId);
       }
 
       if (action === "ship") {
-        await shipSellerOrder(order.id);
+        return shipSellerOrder(targetOrderId);
       }
 
       if (action === "complete") {
-        await completeSellerOrder(order.id);
+        return completeSellerOrder(targetOrderId);
       }
 
-      await loadOrder();
+      throw new Error("Hành động đơn hàng không hợp lệ.");
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.seller.orders.all,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.orders.all,
+        }),
+      ]);
+    },
+  });
+
+  const errorMessage = error
+    ? error?.response?.data?.message || "Không thể tải chi tiết đơn hàng."
+    : "";
+
+  const isProcessing = orderActionMutation.isPending;
+
+  function loadOrder() {
+    refetch();
+  }
+
+  async function handleAction(action) {
+    try {
+      await orderActionMutation.mutateAsync({
+        orderId: order.id,
+        action,
+      });
     } catch (error) {
       alert(
         error?.response?.data?.message ||
+          error?.message ||
           "Không thể cập nhật đơn hàng.",
       );
-    } finally {
-      setIsProcessing(false);
     }
   }
 
@@ -245,7 +249,6 @@ function SellerOrderDetailPage() {
                   Đây là một đơn hàng của khách trong hệ thống shop.
                 </p>
               </div>
-
             </div>
           </div>
 

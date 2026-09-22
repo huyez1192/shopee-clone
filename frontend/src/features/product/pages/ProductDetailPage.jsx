@@ -1,6 +1,6 @@
-import {useCallback, useEffect, useMemo, useState,} from "react";
-
-import {Link, useLocation, useNavigate, useParams,} from "react-router-dom";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
 import EmptyState from "../../../components/common/EmptyState";
 import ErrorState from "../../../components/common/ErrorState";
@@ -9,13 +9,13 @@ import LoadingState from "../../../components/common/LoadingState";
 import fallbackProductImage from "../../../assets/images/product-placeholder.png";
 
 import { getApiErrorMessage } from "../../../utils/getApiErrorMessage";
+import { queryKeys } from "../../../query/queryKeys";
 
-import {getProductById, getProductVariants,} from "../api/productApi";
+import { getProductById, getProductVariants } from "../api/productApi";
 
 import styles from "./ProductDetailPage.module.css";
 
 import useAuth from "../../auth/hooks/useAuth";
-
 import { addCartItem } from "../../cart/api/cartApi";
 
 function formatPrice(price) {
@@ -28,161 +28,111 @@ function formatPrice(price) {
 
 function ProductDetailPage() {
   const { productId } = useParams();
-
-  const [product, setProduct] = useState(null);
-  const [variants, setVariants] = useState([]);
+  const queryClient = useQueryClient();
 
   const [selectedValues, setSelectedValues] = useState({});
-
   const [quantity, setQuantity] = useState(1);
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-
   const [showVariantError, setShowVariantError] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const { isAuthenticated } = useAuth();
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const {
+    data: product = null,
+    isLoading: isProductLoading,
+    error: productError,
+    refetch: refetchProduct,
+  } = useQuery({
+    queryKey: queryKeys.products.detail(productId),
+    queryFn: () => getProductById(productId),
+    enabled: Boolean(productId),
+  });
 
-  const [isBuyingNow, setIsBuyingNow] = useState(false);
+  const {
+    data: variants = [],
+    isLoading: isVariantsLoading,
+    error: variantsError,
+    refetch: refetchVariants,
+  } = useQuery({
+    queryKey: queryKeys.products.variants(productId),
+    queryFn: () => getProductVariants(productId),
+    enabled: Boolean(productId),
+    select: (response) => Array.isArray(response) ? response : [],
+  });
 
-  const [actionError, setActionError] = useState("");
+  const addToCartMutation = useMutation({
+    mutationFn: addCartItem,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.cart.all }),
+  });
 
-  const [successMessage, setSuccessMessage] = useState("");
+  const buyNowMutation = useMutation({
+    mutationFn: addCartItem,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.cart.all }),
+  });
 
+  const isLoading = isProductLoading || isVariantsLoading;
+  const queryError = productError || variantsError;
+  const errorMessage = queryError ? getApiErrorMessage(queryError, "Không thể tải thông tin sản phẩm.") : "";
 
-  const loadProduct = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setErrorMessage("");
+  const isAddingToCart = addToCartMutation.isPending;
+  const isBuyingNow = buyNowMutation.isPending;
 
-      const [
-        productResponse,
-        variantResponse,
-      ] = await Promise.all([
-        getProductById(productId),
-        getProductVariants(productId),
-      ]);
-
-      setProduct(productResponse);
-
-      setVariants(
-        Array.isArray(variantResponse)
-          ? variantResponse
-          : [],
-      );
-    } catch (error) {
-      setErrorMessage(
-        getApiErrorMessage(
-          error,
-          "Không thể tải thông tin sản phẩm.",
-        ),
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [productId]);
-
-  useEffect(() => {
-    loadProduct();
-  }, [loadProduct]);
+  function loadProduct() {
+    refetchProduct();
+    refetchVariants();
+  }
 
   const variantGroups = useMemo(() => {
     const groups = {};
 
     variants.forEach((variant) => {
-      if (
-        variant.variantName1 &&
-        variant.variantValue1
-      ) {
+      if (variant.variantName1 && variant.variantValue1) {
         if (!groups[variant.variantName1]) {
           groups[variant.variantName1] = new Set();
         }
 
-        groups[variant.variantName1].add(
-          variant.variantValue1,
-        );
+        groups[variant.variantName1].add(variant.variantValue1);
       }
 
-      if (
-        variant.variantName2 &&
-        variant.variantValue2
-      ) {
+      if (variant.variantName2 && variant.variantValue2) {
         if (!groups[variant.variantName2]) {
           groups[variant.variantName2] = new Set();
         }
 
-        groups[variant.variantName2].add(
-          variant.variantValue2,
-        );
+        groups[variant.variantName2].add(variant.variantValue2);
       }
     });
 
-    return Object.entries(groups).map(
-      ([name, values]) => ({
-        name,
-        values: [...values],
-      }),
-    );
+    return Object.entries(groups).map(([name, values]) => ({
+      name,
+      values: [...values],
+    }));
   }, [variants]);
 
   const selectedVariant = useMemo(() => {
     if (variantGroups.length === 0) {
-      return variants.length === 1
-        ? variants[0]
-        : null;
+      return variants.length === 1 ? variants[0] : null;
     }
 
-    return (
-      variants.find((variant) => {
-        const firstMatches =
-          !variant.variantName1 ||
-          selectedValues[variant.variantName1] ===
-            variant.variantValue1;
+    return variants.find((variant) => {
+      const firstMatches = !variant.variantName1 || selectedValues[variant.variantName1] === variant.variantValue1;
+      const secondMatches = !variant.variantName2 || selectedValues[variant.variantName2] === variant.variantValue2;
 
-        const secondMatches =
-          !variant.variantName2 ||
-          selectedValues[variant.variantName2] ===
-            variant.variantValue2;
-
-        return firstMatches && secondMatches;
-      }) || null
-    );
-  }, [
-    variants,
-    variantGroups,
-    selectedValues,
-  ]);
+      return firstMatches && secondMatches;
+    }) || null;
+  }, [variants, variantGroups, selectedValues]);
 
   const hasVariants = variantGroups.length > 0;
 
-  const isSelectionComplete =
-    !hasVariants ||
-    variantGroups.every(
-      (group) => selectedValues[group.name],
-    );
+  const isSelectionComplete = !hasVariants || variantGroups.every((group) => selectedValues[group.name]);
 
-  const isInvalidCombination =
-    hasVariants &&
-    isSelectionComplete &&
-    !selectedVariant;
+  const isInvalidCombination = hasVariants && isSelectionComplete && !selectedVariant;
 
-
-
-
-
-
-  const displayedPrice =
-    selectedVariant?.price ?? product?.minPrice;
-
-  const availableStock =
-    selectedVariant?.stockQuantity ??
-    product?.totalStock ??
-    0;
+  const availableStock = selectedVariant?.stockQuantity ?? product?.totalStock ?? 0;
 
   const isOutOfStock = availableStock <= 0;
 
@@ -197,35 +147,21 @@ function ProductDetailPage() {
   }
 
   function handleDecreaseQuantity() {
-    setQuantity((currentQuantity) =>
-      Math.max(1, currentQuantity - 1),
-    );
+    setQuantity((currentQuantity) => Math.max(1, currentQuantity - 1));
   }
 
   function handleIncreaseQuantity() {
-    setQuantity((currentQuantity) =>
-      Math.min(
-        availableStock,
-        currentQuantity + 1,
-      ),
-    );
+    setQuantity((currentQuantity) => Math.min(availableStock, currentQuantity + 1));
   }
 
   function handleQuantityChange(event) {
-    const nextQuantity = Number(
-      event.target.value,
-    );
+    const nextQuantity = Number(event.target.value);
 
     if (!Number.isInteger(nextQuantity)) {
       return;
     }
 
-    setQuantity(
-      Math.min(
-        Math.max(1, nextQuantity),
-        availableStock,
-      ),
-    );
+    setQuantity(Math.min(Math.max(1, nextQuantity), availableStock));
   }
 
   if (isLoading) {
@@ -282,8 +218,7 @@ function ProductDetailPage() {
     }
 
     if (!isAuthenticated) {
-      const redirectPath =
-        `${location.pathname}${location.search}`;
+      const redirectPath = `${location.pathname}${location.search}`;
 
       navigate("/login", {
         state: {
@@ -295,9 +230,7 @@ function ProductDetailPage() {
     }
 
     try {
-      setIsBuyingNow(true);
-
-      const response = await addCartItem({
+      const response = await buyNowMutation.mutateAsync({
         variantId: selectedVariant.id,
         quantity,
       });
@@ -334,12 +267,8 @@ function ProductDetailPage() {
           "Không thể mua sản phẩm ngay.",
         ),
       );
-    } finally {
-      setIsBuyingNow(false);
     }
   }
-
-
 
   async function handleAddToCart() {
     setActionError("");
@@ -350,8 +279,7 @@ function ProductDetailPage() {
     }
 
     if (!isAuthenticated) {
-      const redirectPath =
-        `${location.pathname}${location.search}`;
+      const redirectPath = `${location.pathname}${location.search}`;
 
       navigate("/login", {
         state: {
@@ -363,9 +291,7 @@ function ProductDetailPage() {
     }
 
     try {
-      setIsAddingToCart(true);
-
-      await addCartItem({
+      await addToCartMutation.mutateAsync({
         variantId: selectedVariant.id,
         quantity,
       });
@@ -380,12 +306,8 @@ function ProductDetailPage() {
           "Không thể thêm sản phẩm vào giỏ hàng.",
         ),
       );
-    } finally {
-      setIsAddingToCart(false);
     }
   }
-
-
 
   return (
     <main className={styles.page}>

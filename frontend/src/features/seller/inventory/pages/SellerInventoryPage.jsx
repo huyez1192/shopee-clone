@@ -1,12 +1,8 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import fallbackProductImage
-  from "../../../../assets/images/product-placeholder.png";
+import fallbackProductImage from "../../../../assets/images/product-placeholder.png";
+import { queryKeys } from "../../../../query/queryKeys";
 
 import {
   getSellerProducts,
@@ -17,10 +13,7 @@ import {
 import styles from "./SellerInventoryPage.module.css";
 
 function getVariantLabel(variant) {
-  const values = [
-    variant.variantValue1,
-    variant.variantValue2,
-  ].filter(Boolean);
+  const values = [variant.variantValue1, variant.variantValue2].filter(Boolean);
 
   if (values.length === 0) {
     return "Phân loại mặc định";
@@ -30,199 +23,139 @@ function getVariantLabel(variant) {
 }
 
 function SellerInventoryPage() {
-  const [inventoryItems, setInventoryItems] =
-    useState([]);
+  const queryClient = useQueryClient();
 
-  const [keyword, setKeyword] =
-    useState("");
+  const [keyword, setKeyword] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [editingVariantId, setEditingVariantId] = useState(null);
+  const [stockInput, setStockInput] = useState("");
 
-  const [searchKeyword, setSearchKeyword] =
-    useState("");
+  const {
+    data: products = [],
+    isLoading: isProductsLoading,
+    error: productsError,
+  } = useQuery({
+    queryKey: queryKeys.seller.products.all,
+    queryFn: getSellerProducts,
+    select: (response) => Array.isArray(response) ? response : response?.content || [],
+  });
 
-  const [isLoading, setIsLoading] =
-    useState(true);
+  const variantQueries = useQueries({
+    queries: products.map((product) => ({
+      queryKey: queryKeys.seller.products.variants(product.id),
+      queryFn: () => getSellerProductVariants(product.id),
+      select: (response) => Array.isArray(response) ? response : [],
+    })),
+  });
 
-  const [errorMessage, setErrorMessage] =
-    useState("");
+  const updateStockMutation = useMutation({
+    mutationFn: ({ item, newStock }) =>
+      updateSellerProductVariant(item.productId, item.id, {
+        variantName1: item.variantName1,
+        variantValue1: item.variantValue1,
+        variantName2: item.variantName2,
+        variantValue2: item.variantValue2,
+        price: Number(item.price),
+        stockQuantity: newStock,
+        skuCode: item.skuCode || null,
+      }),
 
-  const [editingVariantId, setEditingVariantId] =
-    useState(null);
+    onSuccess: (updatedVariant, variables) => {
+      const { item } = variables;
 
-  const [stockInput, setStockInput] =
-    useState("");
-
-  const [isSaving, setIsSaving] =
-    useState(false);
-
-  /*
-   * =========================================
-   * LOAD INVENTORY
-   * =========================================
-   */
-
-  const loadInventory = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setErrorMessage("");
-
-      /*
-       * Bước 1:
-       * lấy toàn bộ Product của shop.
-       */
-      const productResponse =
-        await getSellerProducts();
-
-      const products =
-        Array.isArray(productResponse)
-          ? productResponse
-          : [];
-
-      /*
-       * Bước 2:
-       * mỗi Product lấy danh sách Variant.
-       */
-      const variantResponses =
-        await Promise.all(
-          products.map(async (product) => {
-            const variants =
-              await getSellerProductVariants(
-                product.id,
-              );
-
-            return {
-              product,
-              variants:
-                Array.isArray(variants)
-                  ? variants
-                  : [],
-            };
-          }),
-        );
-
-      /*
-       * Bước 3:
-       * chuyển:
-       *
-       * Product
-       *   -> Variant
-       *   -> Variant
-       *
-       * thành một mảng phẳng.
-       */
-      const items =
-        variantResponses.flatMap(
-          ({
-            product,
-            variants,
-          }) =>
-            variants.map((variant) => ({
-              ...variant,
-
-              productId:
-                product.id,
-
-              productName:
-                product.name,
-
-              productImageUrl:
-                product.imageUrl,
-
-              categoryName:
-                product.categoryName,
-            })),
-        );
-
-      setInventoryItems(items);
-    } catch (error) {
-      console.error(error);
-
-      setErrorMessage(
-        error?.response?.data?.message ||
-          "Không thể tải dữ liệu tồn kho.",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadInventory();
-  }, [loadInventory]);
-
-  /*
-   * =========================================
-   * INVENTORY OVERVIEW
-   * =========================================
-   */
-
-  const inventorySummary =
-    useMemo(() => {
-      let inStock = 0;
-      let lowStock = 0;
-      let outOfStock = 0;
-
-      inventoryItems.forEach(
-        (item) => {
-          const stock =
-            Number(
-              item.stockQuantity,
-            ) || 0;
-
-          if (stock === 0) {
-            outOfStock += 1;
-          } else if (stock <= 10) {
-            lowStock += 1;
-          } else {
-            inStock += 1;
+      queryClient.setQueryData(
+        queryKeys.seller.products.variants(item.productId),
+        (currentVariants) => {
+          if (!Array.isArray(currentVariants)) {
+            return currentVariants;
           }
-        },
-      );
 
-      return {
-        inStock,
-        lowStock,
-        outOfStock,
-      };
-    }, [inventoryItems]);
-
-  /*
-   * =========================================
-   * SEARCH
-   * =========================================
-   */
-
-  const filteredItems =
-    useMemo(() => {
-      const value =
-        searchKeyword
-          .trim()
-          .toLowerCase();
-
-      if (!value) {
-        return inventoryItems;
-      }
-
-      return inventoryItems.filter(
-        (item) => {
-          const variantText =
-            getVariantLabel(item)
-              .toLowerCase();
-
-          return (
-            item.productName
-              ?.toLowerCase()
-              .includes(value) ||
-            item.skuCode
-              ?.toLowerCase()
-              .includes(value) ||
-            variantText.includes(value)
+          return currentVariants.map((variant) =>
+            variant.id === item.id ? { ...variant, ...updatedVariant } : variant,
           );
         },
       );
-    }, [
-      inventoryItems,
-      searchKeyword,
-    ]);
+
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.seller.products.all,
+        exact: true,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.products.all,
+      });
+    },
+  });
+
+  const inventoryItems = useMemo(() => {
+    return products.flatMap((product, index) => {
+      const variants = variantQueries[index]?.data || [];
+
+      return variants.map((variant) => ({
+        ...variant,
+        productId: product.id,
+        productName: product.name,
+        productImageUrl: product.imageUrl,
+        categoryName: product.categoryName,
+      }));
+    });
+  }, [products, variantQueries]);
+
+  const variantsLoading = variantQueries.some((query) => query.isLoading);
+  const variantsError = variantQueries.find((query) => query.error)?.error;
+
+  const isLoading = isProductsLoading || variantsLoading;
+  const queryError = productsError || variantsError;
+
+  const errorMessage = queryError
+    ? queryError?.response?.data?.message || "Không thể tải dữ liệu tồn kho."
+    : "";
+
+  const isSaving = updateStockMutation.isPending;
+
+  const inventorySummary = useMemo(() => {
+    let inStock = 0;
+    let lowStock = 0;
+    let outOfStock = 0;
+
+    inventoryItems.forEach((item) => {
+      const stock = Number(item.stockQuantity) || 0;
+
+      if (stock === 0) {
+        outOfStock += 1;
+      } else if (stock <= 10) {
+        lowStock += 1;
+      } else {
+        inStock += 1;
+      }
+    });
+
+    return { inStock, lowStock, outOfStock };
+  }, [inventoryItems]);
+
+  const filteredItems = useMemo(() => {
+    const value = searchKeyword.trim().toLowerCase();
+
+    if (!value) {
+      return inventoryItems;
+    }
+
+    return inventoryItems.filter((item) => {
+      const variantText = getVariantLabel(item).toLowerCase();
+
+      return (
+        item.productName?.toLowerCase().includes(value) ||
+        item.skuCode?.toLowerCase().includes(value) ||
+        variantText.includes(value)
+      );
+    });
+  }, [inventoryItems, searchKeyword]);
+
+  function loadInventory() {
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.seller.products.all,
+    });
+  }
 
   function handleSearch() {
     setSearchKeyword(keyword);
@@ -233,20 +166,9 @@ function SellerInventoryPage() {
     setSearchKeyword("");
   }
 
-  /*
-   * =========================================
-   * EDIT STOCK
-   * =========================================
-   */
-
   function handleStartEdit(item) {
     setEditingVariantId(item.id);
-
-    setStockInput(
-      String(
-        item.stockQuantity ?? 0,
-      ),
-    );
+    setStockInput(String(item.stockQuantity ?? 0));
   }
 
   function handleCancelEdit() {
@@ -255,93 +177,22 @@ function SellerInventoryPage() {
   }
 
   async function handleSaveStock(item) {
-    const newStock =
-      Number(stockInput);
+    const newStock = Number(stockInput);
 
-    if (
-      !Number.isInteger(newStock) ||
-      newStock < 0
-    ) {
-      alert(
-        "Số lượng tồn kho phải là số nguyên lớn hơn hoặc bằng 0.",
-      );
-
+    if (!Number.isInteger(newStock) || newStock < 0) {
+      alert("Số lượng tồn kho phải là số nguyên lớn hơn hoặc bằng 0.");
       return;
     }
 
     try {
-      setIsSaving(true);
-
-      /*
-       * API hiện tại là PUT,
-       * nên phải gửi lại đầy đủ
-       * thông tin Variant.
-       */
-      const updatedVariant =
-        await updateSellerProductVariant(
-          item.productId,
-          item.id,
-          {
-            variantName1:
-              item.variantName1,
-
-            variantValue1:
-              item.variantValue1,
-
-            variantName2:
-              item.variantName2,
-
-            variantValue2:
-              item.variantValue2,
-
-            price:
-              Number(item.price),
-
-            stockQuantity:
-              newStock,
-
-            skuCode:
-              item.skuCode || null,
-          },
-        );
-
-      /*
-       * Không cần load lại toàn trang.
-       * Chỉ cập nhật variant vừa sửa.
-       */
-      setInventoryItems(
-        (current) =>
-          current.map(
-            (inventoryItem) =>
-              inventoryItem.id ===
-              item.id
-                ? {
-                    ...inventoryItem,
-                    ...updatedVariant,
-                  }
-                : inventoryItem,
-          ),
-      );
-
+      await updateStockMutation.mutateAsync({ item, newStock });
       setEditingVariantId(null);
       setStockInput("");
     } catch (error) {
       console.error(error);
-
-      alert(
-        error?.response?.data?.message ||
-          "Không thể cập nhật tồn kho.",
-      );
-    } finally {
-      setIsSaving(false);
+      alert(error?.response?.data?.message || "Không thể cập nhật tồn kho.");
     }
   }
-
-  /*
-   * =========================================
-   * STATE
-   * =========================================
-   */
 
   if (isLoading) {
     return (
@@ -356,10 +207,7 @@ function SellerInventoryPage() {
       <div className={styles.state}>
         <p>{errorMessage}</p>
 
-        <button
-          type="button"
-          onClick={loadInventory}
-        >
+        <button type="button" onClick={loadInventory}>
           Thử lại
         </button>
       </div>

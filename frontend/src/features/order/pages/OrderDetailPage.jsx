@@ -1,21 +1,18 @@
-import {useCallback, useEffect, useState,} from "react";
-
-import {Link, useNavigate, useParams, } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import fallbackProductImage from "../../../assets/images/product-placeholder.png";
 
 import LoadingState from "../../../components/common/LoadingState";
-
 import ErrorState from "../../../components/common/ErrorState";
 
-import {getOrderById, } from "../api/orderApi";
+import { queryKeys } from "../../../query/queryKeys";
+import { getOrderById } from "../api/orderApi";
 
 import styles from "./OrderDetailPage.module.css";
 
 function formatPrice(value) {
-  return new Intl.NumberFormat(
-    "vi-VN",
-  ).format(Number(value) || 0);
+  return new Intl.NumberFormat("vi-VN").format(Number(value) || 0);
 }
 
 function formatDateTime(value) {
@@ -23,16 +20,13 @@ function formatDateTime(value) {
     return "";
   }
 
-  return new Intl.DateTimeFormat(
-    "vi-VN",
-    {
-      hour: "2-digit",
-      minute: "2-digit",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    },
-  ).format(new Date(value));
+  return new Intl.DateTimeFormat("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(value));
 }
 
 function getOrderStatusLabel(order) {
@@ -87,44 +81,26 @@ function getCurrentStep(order) {
 
 function OrderDetailPage() {
   const { orderId } = useParams();
-
   const navigate = useNavigate();
 
-  const [order, setOrder] = useState(null);
+  const {
+    data: order = null,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: queryKeys.orders.detail(orderId),
+    queryFn: () => getOrderById(orderId),
+    enabled: Boolean(orderId),
+  });
 
-  const [isLoading, setIsLoading] =
-    useState(true);
+  const errorMessage = error
+    ? error?.response?.data?.message || "Không thể tải chi tiết đơn hàng."
+    : "";
 
-  const [errorMessage, setErrorMessage] =
-    useState("");
-
-  const loadOrder = useCallback(
-    async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage("");
-
-        const response =
-          await getOrderById(orderId);
-
-        setOrder(response);
-      } catch (error) {
-        console.error(error);
-
-        setErrorMessage(
-          error?.response?.data?.message ||
-            "Không thể tải chi tiết đơn hàng.",
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [orderId],
-  );
-
-  useEffect(() => {
-    loadOrder();
-  }, [loadOrder]);
+  function loadOrder() {
+    refetch();
+  }
 
   if (isLoading) {
     return (
@@ -147,11 +123,8 @@ function OrderDetailPage() {
     return null;
   }
 
-  const cancelled =
-    order.status === "CANCELLED";
-
-  const currentStep =
-    getCurrentStep(order);
+  const cancelled = order.status === "CANCELLED";
+  const currentStep = getCurrentStep(order);
 
   const steps = [
     {

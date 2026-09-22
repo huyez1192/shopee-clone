@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import {getCurrentUserRequest, loginRequest, registerRequest,} from "../api/authApi";
-
+import { getCurrentUserRequest, loginRequest, registerRequest } from "../api/authApi";
 import { AUTH_UNAUTHORIZED_EVENT } from "../constants/authEvents";
-
-import { clearAuthStorage, getAccessToken, getStoredUser, saveAuthStorage,} from "../utils/authStorage";
+import { clearAuthStorage, getAccessToken, getStoredUser, saveAuthStorage } from "../utils/authStorage";
+import { queryKeys } from "../../../query/queryKeys";
 
 import AuthContext from "./AuthContext";
 
@@ -16,115 +16,108 @@ function createUserFromAuthResponse(authResponse) {
 }
 
 function AuthProvider({ children }) {
+  const queryClient = useQueryClient();
+
   const [token, setToken] = useState(getAccessToken);
-  const [user, setUser] = useState(getStoredUser);
-  const [isInitializing, setIsInitializing] = useState(true);
+  const [sessionUser, setSessionUser] = useState(getStoredUser);
 
-  const isAuthenticated = Boolean(token && user);
+  const {
+    data: currentUser,
+    isPending: isCurrentUserPending,
+    isError: isCurrentUserError,
+  } = useQuery({
+    queryKey: queryKeys.auth.currentUser,
+    queryFn: async () => {
+      try {
+        const authenticatedUser = await getCurrentUserRequest();
 
-  function clearAuthState() {
+        saveAuthStorage({ token, user: authenticatedUser });
+        return authenticatedUser;
+      } catch (error) {
+        clearAuthStorage();
+        setToken(null);
+        setSessionUser(null);
+        throw error;
+      }
+    },
+    enabled: Boolean(token),
+    retry: false,
+  });
+
+  const loginMutation = useMutation({
+    mutationFn: loginRequest,
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: registerRequest,
+  });
+
+  const user = currentUser ?? sessionUser;
+  const isInitializing = Boolean(token) && isCurrentUserPending;
+  const isAuthenticated = Boolean(token && user && !isCurrentUserError);
+
+  const clearPrivateQueryCache = useCallback(() => {
+    queryClient.removeQueries({ queryKey: queryKeys.auth.currentUser });
+    queryClient.removeQueries({ queryKey: queryKeys.cart.all });
+    queryClient.removeQueries({ queryKey: queryKeys.addresses.all });
+    queryClient.removeQueries({ queryKey: ["checkout"] });
+    queryClient.removeQueries({ queryKey: queryKeys.orders.all });
+    queryClient.removeQueries({ queryKey: ["payment"] });
+    queryClient.removeQueries({ queryKey: ["seller"] });
+  }, [queryClient]);
+
+  const clearAuthState = useCallback(() => {
     clearAuthStorage();
     setToken(null);
-    setUser(null);
-  }
+    setSessionUser(null);
+    clearPrivateQueryCache();
+  }, [clearPrivateQueryCache]);
 
   useEffect(() => {
-    let isCancelled = false;
-
     function handleUnauthorized() {
-      if (isCancelled) {
-        return;
-      }
-
+      clearAuthStorage();
       setToken(null);
-      setUser(null);
-      setIsInitializing(false);
+      setSessionUser(null);
+      clearPrivateQueryCache();
     }
 
-    async function initializeAuth() {
-      const storedToken = getAccessToken();
-
-      if (!storedToken) {
-        setToken(null);
-        setUser(null);
-        setIsInitializing(false);
-        return;
-      }
-
-      try {
-        const currentUser = await getCurrentUserRequest();
-
-        if (isCancelled) {
-          return;
-        }
-
-        saveAuthStorage({
-          token: storedToken,
-          user: currentUser,
-        });
-
-        setToken(storedToken);
-        setUser(currentUser);
-      } catch (error) {
-        if (!isCancelled) {
-          console.error(
-            "Không thể khôi phục phiên đăng nhập.",
-            error,
-          );
-
-          clearAuthState();
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsInitializing(false);
-        }
-      }
-    }
-
-    window.addEventListener(
-      AUTH_UNAUTHORIZED_EVENT,
-      handleUnauthorized,
-    );
-
-    initializeAuth();
+    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
 
     return () => {
-      isCancelled = true;
-
-      window.removeEventListener(
-        AUTH_UNAUTHORIZED_EVENT,
-        handleUnauthorized,
-      );
+      window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
     };
-  }, []);
+  }, [clearPrivateQueryCache]);
 
   async function establishSession(authResponse) {
     if (!authResponse?.token) {
       throw new Error("Backend không trả về JWT.");
     }
 
-    const temporaryUser =
-      createUserFromAuthResponse(authResponse);
+    const temporaryUser = createUserFromAuthResponse(authResponse);
 
-    // Phải lưu token trước để request /users/me
-    // có thể gắn Authorization header.
     saveAuthStorage({
       token: authResponse.token,
       user: temporaryUser,
     });
 
     try {
-      const currentUser = await getCurrentUserRequest();
+      queryClient.removeQueries({ queryKey: queryKeys.auth.currentUser });
+
+      const authenticatedUser = await queryClient.fetchQuery({
+        queryKey: queryKeys.auth.currentUser,
+        queryFn: getCurrentUserRequest,
+        staleTime: 0,
+      });
 
       saveAuthStorage({
         token: authResponse.token,
-        user: currentUser,
+        user: authenticatedUser,
       });
 
       setToken(authResponse.token);
-      setUser(currentUser);
+      setSessionUser(authenticatedUser);
 
-      return currentUser;
+      return authenticatedUser;
     } catch (error) {
       clearAuthState();
       throw error;
@@ -132,18 +125,14 @@ function AuthProvider({ children }) {
   }
 
   async function login(credentials) {
-    const authResponse = await loginRequest(credentials);
-
+    const authResponse = await loginMutation.mutateAsync(credentials);
     await establishSession(authResponse);
-
     return authResponse;
   }
 
   async function register(registerData) {
-    const authResponse = await registerRequest(registerData);
-
+    const authResponse = await registerMutation.mutateAsync(registerData);
     await establishSession(authResponse);
-
     return authResponse;
   }
 

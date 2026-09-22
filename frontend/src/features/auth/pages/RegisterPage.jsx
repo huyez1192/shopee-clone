@@ -1,10 +1,14 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-import { Link } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
 
 import styles from "./RegisterPage.module.css";
 
 function RegisterPage() {
+  const { register } = useAuth();
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -13,14 +17,10 @@ function RegisterPage() {
     confirmPassword: "",
   });
 
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function handleChange(event) {
-    const {
-      name,
-      value,
-    } = event.target;
+    const { name, value } = event.target;
 
     setForm((current) => ({
       ...current,
@@ -31,13 +31,25 @@ function RegisterPage() {
   async function handleSubmit(event) {
     event.preventDefault();
 
-    try {
-      setIsSubmitting(true);
+    if (form.password !== form.confirmPassword) {
+      alert("Mật khẩu xác nhận không khớp.");
+      return;
+    }
 
-      /*
-       * ĐẶT LOGIC REGISTER HIỆN TẠI
-       * CỦA BẠN Ở ĐÂY.
-       */
+    setIsSubmitting(true);
+
+    try {
+      await register({
+        fullName: form.fullName.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        password: form.password,
+        confirmPassword: form.confirmPassword,
+      });
+
+      navigate("/", { replace: true });
+    } catch (error) {
+      alert(error?.response?.data?.message || error?.message || "Không thể đăng ký tài khoản.");
     } finally {
       setIsSubmitting(false);
     }
@@ -47,10 +59,7 @@ function RegisterPage() {
     <section className={styles.card}>
       <h1>Đăng ký</h1>
 
-      <form
-        onSubmit={handleSubmit}
-        className={styles.form}
-      >
+      <form onSubmit={handleSubmit} className={styles.form}>
         <input
           name="fullName"
           value={form.fullName}
@@ -89,13 +98,8 @@ function RegisterPage() {
           onChange={handleChange}
         />
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-        >
-          {isSubmitting
-            ? "ĐANG ĐĂNG KÝ..."
-            : "ĐĂNG KÝ"}
+        <button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "ĐANG ĐĂNG KÝ..." : "ĐĂNG KÝ"}
         </button>
 
         <div className={styles.divider}>

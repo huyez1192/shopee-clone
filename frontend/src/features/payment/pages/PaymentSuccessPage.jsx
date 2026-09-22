@@ -1,11 +1,9 @@
-import {Link, useLocation, } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import styles from "./PaymentSuccessPage.module.css";
 
 function formatPrice(price) {
-  return new Intl.NumberFormat("vi-VN").format(
-    Number(price) || 0,
-  );
+  return new Intl.NumberFormat("vi-VN").format(Number(price) || 0);
 }
 
 function PaymentSuccessPage() {

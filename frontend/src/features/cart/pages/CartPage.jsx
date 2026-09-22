@@ -1,5 +1,5 @@
-import {useCallback, useEffect, useMemo, useState,} from "react";
-
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
 import EmptyState from "../../../components/common/EmptyState";
@@ -7,68 +7,55 @@ import ErrorState from "../../../components/common/ErrorState";
 import LoadingState from "../../../components/common/LoadingState";
 
 import { getApiErrorMessage } from "../../../utils/getApiErrorMessage";
+import { queryKeys } from "../../../query/queryKeys";
 
 import CartItem from "../components/CartItem";
-
-import {deleteCartItem, getCart, updateCartItem,} from "../api/cartApi";
+import { deleteCartItem, getCart, updateCartItem } from "../api/cartApi";
 
 import styles from "./CartPage.module.css";
 
 function formatPrice(price) {
-  return new Intl.NumberFormat("vi-VN").format(
-    Number(price) || 0,
-  );
+  return new Intl.NumberFormat("vi-VN").format(Number(price) || 0);
 }
 
 function CartPage() {
   const navigate = useNavigate();
-
-  const [cartData, setCartData] = useState(null);
+  const queryClient = useQueryClient();
 
   const [selectedItemIds, setSelectedItemIds] = useState([]);
+  const [actionErrorMessage, setActionErrorMessage] = useState("");
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+  const {
+    data: cartData = null,
+    isLoading,
+    error: cartError,
+    refetch: refetchCart,
+  } = useQuery({
+    queryKey: queryKeys.cart.all,
+    queryFn: getCart,
+  });
 
-  const [updatingItemId, setUpdatingItemId] = useState(null);
+  const updateCartMutation = useMutation({
+    mutationFn: ({ cartItemId, quantity }) => updateCartItem(cartItemId, quantity),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.cart.all }),
+  });
 
-  const [deletingItemId, setDeletingItemId] = useState(null);
+  const deleteCartMutation = useMutation({
+    mutationFn: (cartItemId) => deleteCartItem(cartItemId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.cart.all }),
+  });
 
-  const loadCart = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setErrorMessage("");
+  const errorMessage = cartError
+    ? getApiErrorMessage(cartError, "Không thể tải giỏ hàng.")
+    : actionErrorMessage;
 
-      const response = await getCart();
+  const updatingItemId = updateCartMutation.isPending
+    ? updateCartMutation.variables?.cartItemId ?? null
+    : null;
 
-      setCartData(response);
-
-      setSelectedItemIds((currentIds) => {
-        const validIds = new Set(
-          response.items
-            .filter((item) => item.available)
-            .map((item) => item.id),
-        );
-
-        return currentIds.filter((id) =>
-          validIds.has(id),
-        );
-      });
-    } catch (error) {
-      setErrorMessage(
-        getApiErrorMessage(
-          error,
-          "Không thể tải giỏ hàng.",
-        ),
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadCart();
-  }, [loadCart]);
+  const deletingItemId = deleteCartMutation.isPending
+    ? deleteCartMutation.variables ?? null
+    : null;
 
   const shopGroups = useMemo(() => {
     if (!cartData?.items) {
@@ -93,41 +80,48 @@ function CartPage() {
   }, [cartData]);
 
   const availableItems = useMemo(
-    () =>
-      cartData?.items?.filter(
-        (item) => item.available,
-      ) || [],
+    () => cartData?.items?.filter((item) => item.available) || [],
     [cartData],
+  );
+
+  const availableItemIds = useMemo(
+    () => new Set(availableItems.map((item) => item.id)),
+    [availableItems],
+  );
+
+  const effectiveSelectedItemIds = useMemo(
+    () => selectedItemIds.filter((id) => availableItemIds.has(id)),
+    [availableItemIds, selectedItemIds],
   );
 
   const isAllSelected =
     availableItems.length > 0 &&
-    selectedItemIds.length === availableItems.length;
+    effectiveSelectedItemIds.length === availableItems.length;
 
   const selectedItems = useMemo(() => {
     if (!cartData?.items) {
       return [];
     }
 
-    return cartData.items.filter((item) =>
-      selectedItemIds.includes(item.id),
-    );
-  }, [cartData, selectedItemIds]);
+    return cartData.items.filter((item) => effectiveSelectedItemIds.includes(item.id));
+  }, [cartData, effectiveSelectedItemIds]);
 
   const selectedTotal = useMemo(() => {
     return selectedItems.reduce(
-      (total, item) =>
-        total + Number(item.lineTotal),
+      (total, item) => total + Number(item.lineTotal),
       0,
     );
   }, [selectedItems]);
 
+  function loadCart() {
+    setActionErrorMessage("");
+    refetchCart();
+  }
+
   function handleSelectItem(itemId) {
     setSelectedItemIds((currentIds) => {
       if (currentIds.includes(itemId)) {
-        return currentIds.filter(
-          (id) => id !== itemId,
-        );
+        return currentIds.filter((id) => id !== itemId);
       }
 
       return [...currentIds, itemId];
@@ -140,9 +134,7 @@ function CartPage() {
       return;
     }
 
-    setSelectedItemIds(
-      availableItems.map((item) => item.id),
-    );
+    setSelectedItemIds(availableItems.map((item) => item.id));
   }
 
   function handleSelectShop(shop) {
@@ -150,101 +142,72 @@ function CartPage() {
       .filter((item) => item.available)
       .map((item) => item.id);
 
-    const allShopItemsSelected =
-      availableShopItemIds.every((id) =>
-        selectedItemIds.includes(id),
-      );
+    const allShopItemsSelected = availableShopItemIds.every((id) =>
+      effectiveSelectedItemIds.includes(id),
+    );
 
     setSelectedItemIds((currentIds) => {
       if (allShopItemsSelected) {
         return currentIds.filter(
-          (id) =>
-            !availableShopItemIds.includes(id),
+          (id) => !availableShopItemIds.includes(id),
         );
       }
 
-      return [
-        ...new Set([
-          ...currentIds,
-          ...availableShopItemIds,
-        ]),
-      ];
+      return [...new Set([...currentIds, ...availableShopItemIds])];
     });
   }
 
   async function changeQuantity(item, quantity) {
-    if (
-      quantity < 1 ||
-      quantity > item.availableStock
-    ) {
+    if (quantity < 1 || quantity > item.availableStock) {
       return;
     }
 
+    setActionErrorMessage("");
+
     try {
-      setUpdatingItemId(item.id);
-
-      await updateCartItem(item.id, quantity);
-
-      await loadCart();
+      await updateCartMutation.mutateAsync({
+        cartItemId: item.id,
+        quantity,
+      });
     } catch (error) {
-      setErrorMessage(
-        getApiErrorMessage(
-          error,
-          "Không thể cập nhật số lượng.",
-        ),
+      setActionErrorMessage(
+        getApiErrorMessage(error, "Không thể cập nhật số lượng."),
       );
-    } finally {
-      setUpdatingItemId(null);
     }
   }
 
   function handleIncrease(item) {
-    changeQuantity(
-      item,
-      item.quantity + 1,
-    );
+    changeQuantity(item, item.quantity + 1);
   }
 
   function handleDecrease(item) {
-    changeQuantity(
-      item,
-      item.quantity - 1,
-    );
+    changeQuantity(item, item.quantity - 1);
   }
 
   async function handleDelete(item) {
-    try {
-      setDeletingItemId(item.id);
+    setActionErrorMessage("");
 
-      await deleteCartItem(item.id);
+    try {
+      await deleteCartMutation.mutateAsync(item.id);
 
       setSelectedItemIds((currentIds) =>
-        currentIds.filter(
-          (id) => id !== item.id,
-        ),
+        currentIds.filter((id) => id !== item.id),
       );
-
-      await loadCart();
     } catch (error) {
-      setErrorMessage(
-        getApiErrorMessage(
-          error,
-          "Không thể xóa sản phẩm.",
-        ),
+      setActionErrorMessage(
+        getApiErrorMessage(error, "Không thể xóa sản phẩm."),
       );
-    } finally {
-      setDeletingItemId(null);
     }
   }
 
   function handleCheckout() {
-    if (selectedItemIds.length === 0) {
+    if (effectiveSelectedItemIds.length === 0) {
       return;
     }
 
     navigate("/checkout", {
       state: {
-        cartItemIds: selectedItemIds,
+        cartItemIds: effectiveSelectedItemIds,
       },
     });
   }
@@ -302,7 +265,7 @@ function CartPage() {
           const shopSelected =
             availableShopItems.length > 0 &&
             availableShopItems.every((item) =>
-              selectedItemIds.includes(item.id),
+              effectiveSelectedItemIds.includes(item.id),
             );
 
           return (
@@ -333,7 +296,7 @@ function CartPage() {
                 <CartItem
                   key={item.id}
                   item={item}
-                  checked={selectedItemIds.includes(
+                  checked={effectiveSelectedItemIds.includes(
                     item.id,
                   )}
                   isUpdating={
@@ -381,7 +344,7 @@ function CartPage() {
               type="button"
               className={styles.checkoutButton}
               disabled={
-                selectedItemIds.length === 0
+                effectiveSelectedItemIds.length === 0
               }
               onClick={handleCheckout}
             >

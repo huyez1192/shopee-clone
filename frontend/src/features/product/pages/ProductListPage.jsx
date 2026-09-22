@@ -1,5 +1,5 @@
-import {useCallback, useEffect, useMemo, useState, } from "react";
-
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 
 import EmptyState from "../../../components/common/EmptyState";
@@ -8,18 +8,18 @@ import LoadingState from "../../../components/common/LoadingState";
 import Pagination from "../../../components/common/Pagination";
 
 import { getApiErrorMessage } from "../../../utils/getApiErrorMessage";
+import { queryKeys } from "../../../query/queryKeys";
 
 import { getCategories } from "../../category/api/categoryApi";
 import { getProducts } from "../api/productApi";
 
 import ProductFilter from "../components/ProductFilter";
-import styles from "./ProductListPage.module.css";
-
 import ProductSort from "../components/ProductSort";
-
 import ProductGrid from "../components/ProductGrid";
 
-import {calculateTotalPages, filterProducts, paginateProducts, sortProducts,} from "../utils/productListUtils";
+import { calculateTotalPages, filterProducts, paginateProducts, sortProducts } from "../utils/productListUtils";
+
+import styles from "./ProductListPage.module.css";
 
 const PAGE_SIZE = 25;
 
@@ -34,89 +34,56 @@ function getPositivePage(value) {
 }
 
 function ProductListPage() {
-
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
   const [filterError, setFilterError] = useState("");
 
   const keyword = searchParams.get("keyword") || "";
   const categoryId = searchParams.get("categoryId") || "";
-
   const minPrice = searchParams.get("minPrice") || "";
-
   const maxPrice = searchParams.get("maxPrice") || "";
-
   const sortBy = searchParams.get("sortBy") || "relevant";
+  const currentPage = getPositivePage(searchParams.get("page"));
 
-  const currentPage = getPositivePage(
-    searchParams.get("page"),
-  );
-
-  const [filterForm, setFilterForm] = useState({
+  const filterSource = `${keyword}\u0000${categoryId}\u0000${minPrice}\u0000${maxPrice}`;
+  const urlFilterForm = {
     keyword,
     categoryId,
     minPrice,
     maxPrice,
+  };
+  const [filterDraft, setFilterDraft] = useState(null);
+  const filterForm = filterDraft?.source === filterSource
+    ? filterDraft.values
+    : urlFilterForm;
+
+  const {
+    data: products = [],
+    isLoading: isProductsLoading,
+    error: productError,
+    refetch: refetchProducts,
+  } = useQuery({
+    queryKey: queryKeys.products.all,
+    queryFn: getProducts,
+    select: (response) => Array.isArray(response) ? response : [],
   });
 
-  const loadPageData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setErrorMessage("");
+  const {
+    data: categories = [],
+    isLoading: isCategoriesLoading,
+    error: categoryError,
+    refetch: refetchCategories,
+  } = useQuery({
+    queryKey: queryKeys.categories.all,
+    queryFn: getCategories,
+    select: (response) => Array.isArray(response) ? response : [],
+  });
 
-      const [
-        productResponse,
-        categoryResponse,
-      ] = await Promise.all([
-        getProducts(),
-        getCategories(),
-      ]);
+  const isLoading = isProductsLoading || isCategoriesLoading;
+  const queryError = productError || categoryError;
 
-      setProducts(
-        Array.isArray(productResponse)
-          ? productResponse
-          : [],
-      );
-
-      setCategories(
-        Array.isArray(categoryResponse)
-          ? categoryResponse
-          : [],
-      );
-    } catch (error) {
-      setErrorMessage(
-        getApiErrorMessage(
-          error,
-          "Không thể tải danh sách sản phẩm.",
-        ),
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadPageData();
-  }, [loadPageData]);
-
-  useEffect(() => {
-    setFilterForm({
-      keyword,
-      categoryId,
-      minPrice,
-      maxPrice,
-    });
-  }, [
-    keyword,
-    categoryId,
-    minPrice,
-    maxPrice,
-  ]);
+  const errorMessage = queryError
+    ? getApiErrorMessage(queryError, "Không thể tải danh sách sản phẩm.")
+    : "";
 
   const filteredProducts = useMemo(() => {
     return filterProducts(products, {
@@ -125,47 +92,34 @@ function ProductListPage() {
       minPrice,
       maxPrice,
     });
-  }, [
-    products,
-    keyword,
-    categoryId,
-    minPrice,
-    maxPrice,
-  ]);
+  }, [products, keyword, categoryId, minPrice, maxPrice]);
 
   const sortedProducts = useMemo(() => {
     return sortProducts(filteredProducts, sortBy);
   }, [filteredProducts, sortBy]);
 
-  const totalPages = calculateTotalPages(
-    sortedProducts.length,
-    PAGE_SIZE,
-  );
-
-  const validCurrentPage = Math.min(
-    currentPage,
-    totalPages,
-  );
+  const totalPages = calculateTotalPages(sortedProducts.length, PAGE_SIZE);
+  const validCurrentPage = Math.min(currentPage, totalPages);
 
   const visibleProducts = useMemo(() => {
-    return paginateProducts(
-      sortedProducts,
-      validCurrentPage,
-      PAGE_SIZE,
-    );
-  }, [
-    sortedProducts,
-    validCurrentPage,
-  ]);
+    return paginateProducts(sortedProducts, validCurrentPage, PAGE_SIZE);
+  }, [sortedProducts, validCurrentPage]);
 
+  function loadPageData() {
+    refetchProducts();
+    refetchCategories();
+  }
 
   function handleFilterChange(event) {
     const { name, value } = event.target;
 
-    setFilterForm((currentForm) => ({
-      ...currentForm,
-      [name]: value,
-    }));
+    setFilterDraft({
+      source: filterSource,
+      values: {
+        ...filterForm,
+        [name]: value,
+      },
+    });
 
     setFilterError("");
   }
@@ -173,59 +127,32 @@ function ProductListPage() {
   function handleFilterSubmit(event) {
     event.preventDefault();
 
-    const minimumPrice =
-        filterForm.minPrice === ""
-          ? null
-          : Number(filterForm.minPrice);
+    const minimumPrice = filterForm.minPrice === "" ? null : Number(filterForm.minPrice);
+    const maximumPrice = filterForm.maxPrice === "" ? null : Number(filterForm.maxPrice);
 
-      const maximumPrice =
-        filterForm.maxPrice === ""
-          ? null
-          : Number(filterForm.maxPrice);
+    if (minimumPrice !== null && maximumPrice !== null && minimumPrice > maximumPrice) {
+      setFilterError("Giá thấp nhất không được lớn hơn giá cao nhất.");
+      return;
+    }
 
-      if (
-        minimumPrice !== null &&
-        maximumPrice !== null &&
-        minimumPrice > maximumPrice
-      ) {
-        setFilterError(
-          "Giá thấp nhất không được lớn hơn giá cao nhất.",
-        );
-
-        return;
-      }
-
-      setFilterError("");
-
+    setFilterError("");
 
     const nextSearchParams = new URLSearchParams();
 
     if (filterForm.keyword.trim()) {
-      nextSearchParams.set(
-        "keyword",
-        filterForm.keyword.trim(),
-      );
+      nextSearchParams.set("keyword", filterForm.keyword.trim());
     }
 
     if (filterForm.categoryId) {
-      nextSearchParams.set(
-        "categoryId",
-        filterForm.categoryId,
-      );
+      nextSearchParams.set("categoryId", filterForm.categoryId);
     }
 
     if (filterForm.minPrice) {
-      nextSearchParams.set(
-        "minPrice",
-        filterForm.minPrice,
-      );
+      nextSearchParams.set("minPrice", filterForm.minPrice);
     }
 
     if (filterForm.maxPrice) {
-      nextSearchParams.set(
-        "maxPrice",
-        filterForm.maxPrice,
-      );
+      nextSearchParams.set("maxPrice", filterForm.maxPrice);
     }
 
     if (sortBy !== "relevant") {
@@ -233,48 +160,33 @@ function ProductListPage() {
     }
 
     nextSearchParams.set("page", "1");
-
+    setFilterDraft(null);
     setSearchParams(nextSearchParams);
   }
 
   function handleClearFilters() {
-    setFilterForm({
-      keyword: "",
-      categoryId: "",
-      minPrice: "",
-      maxPrice: "",
-    });
-
+    setFilterDraft(null);
     setSearchParams({});
-
     setFilterError("");
   }
 
-
   function handleSortChange(nextSortBy) {
-    const nextSearchParams =
-      new URLSearchParams(searchParams);
+    const nextSearchParams = new URLSearchParams(searchParams);
 
     if (nextSortBy === "relevant") {
-        nextSearchParams.delete("sortBy");
-      } else {
-        nextSearchParams.set("sortBy", nextSortBy);
-      }
+      nextSearchParams.delete("sortBy");
+    } else {
+      nextSearchParams.set("sortBy", nextSortBy);
+    }
 
     nextSearchParams.set("page", "1");
-
     setSearchParams(nextSearchParams);
   }
 
   function handlePageChange(pageNumber) {
-    const nextSearchParams =
-      new URLSearchParams(searchParams);
+    const nextSearchParams = new URLSearchParams(searchParams);
 
-    nextSearchParams.set(
-      "page",
-      String(pageNumber),
-    );
-
+    nextSearchParams.set("page", String(pageNumber));
     setSearchParams(nextSearchParams);
 
     window.scrollTo({
@@ -298,8 +210,6 @@ function ProductListPage() {
     );
   }
 
-
-
   return (
     <main className={styles.page}>
       <div className={styles.container}>
@@ -321,7 +231,6 @@ function ProductListPage() {
             onPageChange={handlePageChange}
           />
 
-
           <div className={styles.productArea}>
             {visibleProducts.length === 0 ? (
               <EmptyState
@@ -339,8 +248,6 @@ function ProductListPage() {
             onPageChange={handlePageChange}
           />
         </section>
-
-
       </div>
     </main>
   );

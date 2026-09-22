@@ -1,21 +1,20 @@
-import {useEffect, useMemo, useState, } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import {Link, useLocation, useNavigate, } from "react-router-dom";
-
+import { queryKeys } from "../../../query/queryKeys";
 import { getPaymentStatus } from "../api/paymentApi";
 
 import styles from "./SePayPaymentPage.module.css";
 
 function formatPrice(price) {
-  return new Intl.NumberFormat("vi-VN").format(
-    Number(price) || 0,
-  );
+  return new Intl.NumberFormat("vi-VN").format(Number(price) || 0);
 }
 
 function SePayPaymentPage() {
   const location = useLocation();
-
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const payment = useMemo(() => {
     if (location.state?.payment) {
@@ -35,62 +34,50 @@ function SePayPaymentPage() {
     }
   }, [location.state]);
 
-  const [paymentStatus, setPaymentStatus] = useState(payment?.status || "PENDING");
-
   const [remainingSeconds, setRemainingSeconds] = useState(0);
 
+  const {
+    data: paymentStatusData,
+    error: paymentStatusError,
+  } = useQuery({
+    queryKey: queryKeys.payment.detail(payment?.paymentCode),
+    queryFn: () => getPaymentStatus(payment.paymentCode),
+    enabled: Boolean(payment?.paymentCode) && payment?.status !== "PAID",
+    refetchInterval: (query) => query.state.data?.status === "PAID" ? false : 3000,
+    refetchIntervalInBackground: true,
+  });
+
+  const paymentStatus = paymentStatusData?.status || payment?.status || "PENDING";
 
   useEffect(() => {
-    if (!payment?.paymentCode) {
+    if (!paymentStatusError) {
       return;
     }
 
-    if (paymentStatus === "PAID") {
-      return;
-    }
-
-    const intervalId = setInterval(
-      async () => {
-        try {
-          const response =
-            await getPaymentStatus(
-              payment.paymentCode,
-            );
-
-          setPaymentStatus(response.status);
-
-          if (response.status === "PAID") {
-            clearInterval(intervalId);
-
-            sessionStorage.removeItem(
-              "sepayPayment",
-            );
-
-            navigate("/payment/success", {
-              replace: true,
-              state: {
-                payment: response,
-              },
-            });
-          }
-        } catch (error) {
-          console.error(
-            "Không thể kiểm tra trạng thái thanh toán:",
-            error,
-          );
-        }
-      },
-      3000,
+    console.error(
+      "Không thể kiểm tra trạng thái thanh toán:",
+      paymentStatusError,
     );
+  }, [paymentStatusError]);
 
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [
-    payment,
-    paymentStatus,
-    navigate,
-  ]);
+  useEffect(() => {
+    if (paymentStatusData?.status !== "PAID") {
+      return;
+    }
+
+    sessionStorage.removeItem("sepayPayment");
+
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.orders.all,
+    });
+
+    navigate("/payment/success", {
+      replace: true,
+      state: {
+        payment: paymentStatusData,
+      },
+    });
+  }, [paymentStatusData, navigate, queryClient]);
 
   useEffect(() => {
     if (!payment?.expiresAt) {
@@ -99,29 +86,21 @@ function SePayPaymentPage() {
 
     function updateRemainingTime() {
       const expiresAt = new Date(payment.expiresAt).getTime();
-
       const now = Date.now();
 
-      const difference =
-        Math.max(
-          0,
-          Math.floor(
-            (expiresAt - now) / 1000,
-          ),
-        );
+      const difference = Math.max(
+        0,
+        Math.floor((expiresAt - now) / 1000),
+      );
 
       setRemainingSeconds(difference);
     }
 
     updateRemainingTime();
 
-    const intervalId = setInterval(
-      updateRemainingTime,
-      1000,
-    );
+    const intervalId = setInterval(updateRemainingTime, 1000);
 
-    return () =>
-      clearInterval(intervalId);
+    return () => clearInterval(intervalId);
   }, [payment]);
 
   if (!payment) {

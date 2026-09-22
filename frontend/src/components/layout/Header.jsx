@@ -1,12 +1,49 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import {useEffect, useState, } from "react";
+import { useState } from "react";
 
 import useAuth from "../../features/auth/hooks/useAuth";
 
 import styles from "./Header.module.css";
 
 import shopeeLogo from "../../assets/images/logo/shopee-logo.png";
+
+function SearchForm({ initialKeyword }) {
+  const navigate = useNavigate();
+  const [searchKeyword, setSearchKeyword] = useState(initialKeyword);
+
+  function handleSearchSubmit(event) {
+    event.preventDefault();
+
+    const keyword = searchKeyword.trim();
+    const nextSearchParams = new URLSearchParams();
+
+    if (keyword) {
+      nextSearchParams.set("keyword", keyword);
+    }
+
+    nextSearchParams.set("page", "1");
+    navigate(`/products?${nextSearchParams.toString()}`);
+  }
+
+  return (
+    <form
+      className={styles.searchForm}
+      onSubmit={handleSearchSubmit}
+    >
+      <input
+        name="keyword"
+        type="search"
+        value={searchKeyword}
+        onChange={(event) => setSearchKeyword(event.target.value)}
+        placeholder="Tìm kiếm sản phẩm, thương hiệu và tên shop"
+        aria-label="Tìm kiếm sản phẩm"
+      />
+
+      <button type="submit">Tìm kiếm</button>
+    </form>
+  );
+}
 
 function Header() {
   const {
@@ -17,47 +54,16 @@ function Header() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const isHomePage = location.pathname === "/";
-
-  const [searchKeyword, setSearchKeyword] = useState("");
-
-  useEffect(() => {
-    if (location.pathname !== "/products") {
-      return;
-    }
-
-    const searchParams = new URLSearchParams(
-      location.search,
-    );
-
-    setSearchKeyword(
-      searchParams.get("keyword") || "",
-    );
-  }, [location.pathname, location.search]);
+  const searchParams = new URLSearchParams(location.search);
+  const initialKeyword = location.pathname === "/products"
+    ? searchParams.get("keyword") || ""
+    : "";
 
 
 
   function handleLogout() {
     logout();
     navigate("/login");
-  }
-
-  function handleSearchSubmit(event) {
-    event.preventDefault();
-
-    const keyword = searchKeyword.trim();
-
-    const nextSearchParams = new URLSearchParams();
-
-    if (keyword) {
-      nextSearchParams.set("keyword", keyword);
-    }
-
-    nextSearchParams.set("page", "1");
-
-    navigate(
-      `/products?${nextSearchParams.toString()}`,
-    );
   }
 
   return (
@@ -150,25 +156,10 @@ function Header() {
           </Link>
 
           <div className={styles.searchArea}>
-            <form
-              className={styles.searchForm}
-              onSubmit={handleSearchSubmit}
-            >
-              <input
-                name="keyword"
-                type="search"
-                value={searchKeyword}
-                onChange={(event) =>
-                  setSearchKeyword(event.target.value)
-                }
-                placeholder="Tìm kiếm sản phẩm, thương hiệu và tên shop"
-                aria-label="Tìm kiếm sản phẩm"
-              />
-
-              <button type="submit">
-                Tìm kiếm
-              </button>
-            </form>
+            <SearchForm
+              key={`${location.pathname}:${initialKeyword}`}
+              initialKeyword={initialKeyword}
+            />
 
             <div className={styles.suggestions}>
               <Link to="/products?keyword=điện%20thoại&page=1">

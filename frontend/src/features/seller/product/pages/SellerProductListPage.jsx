@@ -1,24 +1,23 @@
-import {useCallback, useEffect, useMemo, useState,} from "react";
-
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import fallbackProductImage from "../../../../assets/images/product-placeholder.png";
+import { queryKeys } from "../../../../query/queryKeys";
 
-import {getSellerProducts, getSellerProductVariants,} from "../api/sellerProductApi";
+import {
+  getSellerProducts,
+  getSellerProductVariants,
+} from "../api/sellerProductApi";
 
 import styles from "./SellerProductListPage.module.css";
 
 function formatPrice(value) {
-  return new Intl.NumberFormat(
-    "vi-VN",
-  ).format(Number(value) || 0);
+  return new Intl.NumberFormat("vi-VN").format(Number(value) || 0);
 }
 
 function getVariantLabel(variant) {
-  const values = [
-    variant.variantValue1,
-    variant.variantValue2,
-  ].filter(Boolean);
+  const values = [variant.variantValue1, variant.variantValue2].filter(Boolean);
 
   if (values.length === 0) {
     return "Mặc định";
@@ -28,60 +27,75 @@ function getVariantLabel(variant) {
 }
 
 function SellerProductListPage() {
-  const [products, setProducts] = useState([]);
-
   const [keyword, setKeyword] = useState("");
-
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [expandedProductIds, setExpandedProductIds] = useState([]);
 
-  const [isLoading, setIsLoading] = useState(true);
+  const reportedVariantErrorsRef = useRef(new Set());
 
-  const [errorMessage, setErrorMessage] = useState("");
+  const {
+    data: products = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: queryKeys.seller.products.all,
+    queryFn: getSellerProducts,
+    select: (response) => Array.isArray(response) ? response : [],
+  });
 
-  /*
-   * variantsByProduct:
-   *
-   * {
-   *   4101: [...],
-   *   4102: [...]
-   * }
-   */
-  const [variantsByProduct, setVariantsByProduct, ] = useState({});
+  const variantQueries = useQueries({
+    queries: products.map((product) => ({
+      queryKey: queryKeys.seller.products.variants(product.id),
+      queryFn: () => getSellerProductVariants(product.id),
+      enabled: expandedProductIds.includes(product.id),
+      select: (response) => Array.isArray(response) ? response : [],
+    })),
+  });
 
-  const [expandedProductIds, setExpandedProductIds, ] = useState([]);
+  const errorMessage = error
+    ? error?.response?.data?.message || "Không thể tải danh sách sản phẩm."
+    : "";
 
-  const [loadingVariantIds, setLoadingVariantIds, ] = useState([]);
+  const variantsByProduct = useMemo(() => {
+    const result = {};
 
-  const loadProducts = useCallback(
-    async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage("");
+    products.forEach((product, index) => {
+      result[product.id] = variantQueries[index]?.data || [];
+    });
 
-        const response = await getSellerProducts();
+    return result;
+  }, [products, variantQueries]);
 
-        setProducts(
-          Array.isArray(response)
-            ? response
-            : [],
-        );
-      } catch (error) {
-        console.error(error);
-
-        setErrorMessage(
-          error?.response?.data?.message ||
-            "Không thể tải danh sách sản phẩm.",
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [],
-  );
+  const loadingVariantIds = useMemo(() => {
+    return products
+      .filter((product, index) => variantQueries[index]?.isFetching)
+      .map((product) => product.id);
+  }, [products, variantQueries]);
 
   useEffect(() => {
-    loadProducts();
-  }, [loadProducts]);
+    variantQueries.forEach((query, index) => {
+      if (!query.error) {
+        return;
+      }
+
+      const productId = products[index]?.id;
+      const errorKey = `${productId}-${query.errorUpdatedAt}`;
+
+      if (reportedVariantErrorsRef.current.has(errorKey)) {
+        return;
+      }
+
+      reportedVariantErrorsRef.current.add(errorKey);
+
+      console.error(query.error);
+
+      alert(
+        query.error?.response?.data?.message ||
+          "Không thể tải phân loại sản phẩm.",
+      );
+    });
+  }, [products, variantQueries]);
 
   const filteredProducts = useMemo(() => {
     const value = searchKeyword.trim().toLowerCase();
@@ -92,17 +106,14 @@ function SellerProductListPage() {
 
     return products.filter(
       (product) =>
-        product.name
-          ?.toLowerCase()
-          .includes(value) ||
-        product.categoryName
-          ?.toLowerCase()
-          .includes(value),
+        product.name?.toLowerCase().includes(value) ||
+        product.categoryName?.toLowerCase().includes(value),
     );
-  }, [
-    products,
-    searchKeyword,
-  ]);
+  }, [products, searchKeyword]);
+
+  function loadProducts() {
+    refetch();
+  }
 
   function handleSearch() {
     setSearchKeyword(keyword);
@@ -113,67 +124,14 @@ function SellerProductListPage() {
     setSearchKeyword("");
   }
 
-  async function handleToggleVariants(product,) {
-    const isExpanded = expandedProductIds.includes(product.id,);
+  function handleToggleVariants(product) {
+    setExpandedProductIds((current) => {
+      if (current.includes(product.id)) {
+        return current.filter((id) => id !== product.id);
+      }
 
-    if (isExpanded) {
-      setExpandedProductIds(
-        (current) =>
-          current.filter(
-            (id) =>
-              id !== product.id,
-          ),
-      );
-
-      return;
-    }
-
-    /*
-     * Nếu đã tải variants trước đó
-     * thì không gọi API lại.
-     */
-    if (variantsByProduct[product.id]) {
-      setExpandedProductIds(
-        (current) => [...current, product.id,],
-      );
-
-      return;
-    }
-
-    try {
-      setLoadingVariantIds(
-        (current) => [...current, product.id,],
-      );
-
-      const variants = await getSellerProductVariants(product.id,);
-
-      setVariantsByProduct(
-        (current) => ({
-          ...current,
-
-          [product.id]:
-            Array.isArray(variants)
-              ? variants
-              : [],
-        }),
-      );
-
-      setExpandedProductIds(
-        (current) => [...current, product.id,],
-      );
-    } catch (error) {
-      console.error(error);
-
-      alert(
-        error?.response?.data?.message || "Không thể tải phân loại sản phẩm.",
-      );
-    } finally {
-      setLoadingVariantIds((current) =>
-          current.filter((id) =>
-              id !== product.id,
-          ),
-      );
-    }
+      return [...current, product.id];
+    });
   }
 
   if (isLoading) {
@@ -234,7 +192,7 @@ function SellerProductListPage() {
             value={keyword}
             placeholder="Tìm tên sản phẩm, ngành hàng..."
             onChange={(event) =>
-              setKeyword(event.target.value,)
+              setKeyword(event.target.value)
             }
             onKeyDown={(event) => {
               if (event.key === "Enter") {
@@ -265,7 +223,7 @@ function SellerProductListPage() {
 
       <div className={styles.summary}>
         <strong>
-          {order.totalQuantity} Sản phẩm
+          {filteredProducts.length} Sản phẩm
         </strong>
       </div>
 
@@ -293,9 +251,9 @@ function SellerProductListPage() {
           </div>
         ) : (
           filteredProducts.map((product) => {
-              const expanded = expandedProductIds.includes(product.id,);
+              const expanded = expandedProductIds.includes(product.id);
 
-              const loadingVariants = loadingVariantIds.includes(product.id,);
+              const loadingVariants = loadingVariantIds.includes(product.id);
 
               const variants =
                 (variantsByProduct[product.id] || []).filter(
@@ -322,10 +280,10 @@ function SellerProductListPage() {
                       className={styles.productInfo}
                     >
                       <img
-                        src={item.productImageUrl || fallbackProductImage}
-                        alt={item.productName}
+                        src={product.imageUrl || fallbackProductImage}
+                        alt={product.name}
                         className={styles.productImage}
-                        onError={(event,) => {
+                        onError={(event) => {
                           event.currentTarget.src = fallbackProductImage;
                         }}
                       />
@@ -377,14 +335,14 @@ function SellerProductListPage() {
                         <span
                           className={styles.price}
                         >
-                          ₫ {formatPrice(product.minPrice,)}
+                          ₫ {formatPrice(product.minPrice)}
                         </span>
                       ) : (
                         <div
                           className={styles.priceRange}
                         >
                           <span>
-                            ₫ {formatPrice(product.minPrice,)}
+                            ₫ {formatPrice(product.minPrice)}
                           </span>
 
                           <span>
@@ -392,7 +350,7 @@ function SellerProductListPage() {
                           </span>
 
                           <span>
-                            ₫ {formatPrice(product.maxPrice,)}
+                            ₫ {formatPrice(product.maxPrice)}
                           </span>
                         </div>
                       )}
@@ -455,7 +413,7 @@ function SellerProductListPage() {
                               className={styles.variantMeta}
                             >
                               <strong>
-                                {getVariantLabel(variant,)}
+                                {getVariantLabel(variant)}
                               </strong>
 
                               {variant.skuCode && (
@@ -475,7 +433,7 @@ function SellerProductListPage() {
                             <span
                               className={styles.price}
                             >
-                              ₫ {formatPrice(variant.price,)}
+                              ₫ {formatPrice(variant.price)}
                             </span>
                           </div>
 

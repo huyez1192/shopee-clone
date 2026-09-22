@@ -57,6 +57,7 @@ frontend/.env.production.local
 
 # Local Spring configuration containing secrets
 backend/src/main/resources/application-local.properties
+backend/src/main/resources/application-*.local.properties
 
 # Keep example environment files
 !backend/.env.example
@@ -68,8 +69,3 @@ backend/src/main/resources/application-local.properties
 .DS_Store
 Thumbs.db
 desktop.ini
-
-
-
-
-spring.profiles.active=local

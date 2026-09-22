@@ -1,6 +1,6 @@
-import {useCallback,useEffect,useState,} from "react";
-
-import {Link,useLocation,useNavigate,} from "react-router-dom";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import EmptyState from "../../../components/common/EmptyState";
 import ErrorState from "../../../components/common/ErrorState";
@@ -8,132 +8,135 @@ import LoadingState from "../../../components/common/LoadingState";
 
 import { getAddresses } from "../../address/api/addressApi";
 import { createOrders } from "../../order/api/orderApi";
-
 import { getCheckoutPreview } from "../api/checkoutApi";
 
 import { getApiErrorMessage } from "../../../utils/getApiErrorMessage";
+import { queryKeys } from "../../../query/queryKeys";
 
 import styles from "./CheckoutPage.module.css";
 
 function formatPrice(price) {
-  return new Intl.NumberFormat("vi-VN").format(
-    Number(price) || 0,
-  );
+  return new Intl.NumberFormat("vi-VN").format(Number(price) || 0);
 }
 
 function CheckoutPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const cartItemIds = location.state?.cartItemIds || [];
 
-  const [addresses, setAddresses] = useState([]);
-
-  const [selectedAddressId, setSelectedAddressId] = useState(null);
-
-  const [checkoutData, setCheckoutData] = useState(null);
-
-  const [isLoading, setIsLoading] = useState(true);
-
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-
-  const [errorMessage, setErrorMessage] = useState("");
-
+  const [requestedAddressId, setSelectedAddressId] = useState(null);
+  const [actionErrorMessage, setActionErrorMessage] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("COD");
 
-  const loadCheckout = useCallback(async () => {
-    if (cartItemIds.length === 0) {
-      setIsLoading(false);
-      return;
-    }
+  const {
+    data: addresses = [],
+    isLoading: isAddressesLoading,
+    error: addressesError,
+    refetch: refetchAddresses,
+  } = useQuery({
+    queryKey: queryKeys.addresses.all,
+    queryFn: getAddresses,
+    enabled: cartItemIds.length > 0,
+    select: (response) => Array.isArray(response) ? response : [],
+  });
 
-    try {
-      setIsLoading(true);
-      setErrorMessage("");
+  const requestedAddress = addresses.find(
+    (address) => address.id === requestedAddressId,
+  );
+  const selectedAddressId = requestedAddress?.id
+    ?? addresses.find((address) => address.defaultAddress)?.id
+    ?? addresses[0]?.id
+    ?? null;
 
-      const addressResponse =
-        await getAddresses();
+  const {
+    data: checkoutData = null,
+    isLoading: isCheckoutLoading,
+    error: checkoutError,
+    refetch: refetchCheckout,
+  } = useQuery({
+    queryKey: queryKeys.checkout.preview({
+      addressId: selectedAddressId,
+      cartItemIds,
+    }),
+    queryFn: () =>
+      getCheckoutPreview({
+        addressId: selectedAddressId,
+        cartItemIds,
+      }),
+    enabled: cartItemIds.length > 0 && selectedAddressId !== null,
+    placeholderData: (previousData) => previousData,
+  });
 
-      const addressList =
-        Array.isArray(addressResponse)
-          ? addressResponse
-          : [];
+  const placeOrderMutation = useMutation({
+    mutationFn: createOrders,
+    onSuccess: async (_response, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.cart.all,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.orders.all,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.checkout.preview({
+            addressId: variables.addressId,
+            cartItemIds: variables.cartItemIds,
+          }),
+          refetchType: "none",
+        }),
+      ]);
+    },
+  });
 
-      setAddresses(addressList);
+  const isLoading =
+    isAddressesLoading ||
+    (addresses.length > 0 && selectedAddressId === null) ||
+    (selectedAddressId !== null && isCheckoutLoading && !checkoutData);
 
-      if (addressList.length === 0) {
-        setCheckoutData(null);
-        return;
-      }
+  const isPlacingOrder = placeOrderMutation.isPending;
 
-      const defaultAddress =
-        addressList.find(
-          (address) => address.defaultAddress,
-        ) || addressList[0];
+  let errorMessage = actionErrorMessage;
 
-      setSelectedAddressId(defaultAddress.id);
+  if (!errorMessage && addressesError) {
+    errorMessage = getApiErrorMessage(
+      addressesError,
+      "Không thể tải thông tin thanh toán.",
+    );
+  }
 
-      const preview =
-        await getCheckoutPreview({
-          addressId: defaultAddress.id,
-          cartItemIds,
-        });
+  if (!errorMessage && checkoutError) {
+    errorMessage = getApiErrorMessage(
+      checkoutError,
+      "Không thể cập nhật địa chỉ nhận hàng.",
+    );
+  }
 
-      setCheckoutData(preview);
-    } catch (error) {
-      setErrorMessage(
-        getApiErrorMessage(
-          error,
-          "Không thể tải thông tin thanh toán.",
-        ),
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [cartItemIds]);
+  function loadCheckout() {
+    setActionErrorMessage("");
 
-  useEffect(() => {
-    loadCheckout();
-  }, [loadCheckout]);
+    refetchAddresses();
 
-  async function handleAddressChange(
-    addressId,
-  ) {
-    try {
-      setErrorMessage("");
-
-      setSelectedAddressId(addressId);
-
-      const preview =
-        await getCheckoutPreview({
-          addressId,
-          cartItemIds,
-        });
-
-      setCheckoutData(preview);
-    } catch (error) {
-      setErrorMessage(
-        getApiErrorMessage(
-          error,
-          "Không thể cập nhật địa chỉ nhận hàng.",
-        ),
-      );
+    if (selectedAddressId !== null) {
+      refetchCheckout();
     }
   }
 
+  function handleAddressChange(addressId) {
+    setActionErrorMessage("");
+    setSelectedAddressId(addressId);
+  }
+
   async function handlePlaceOrder() {
-    if (
-      !selectedAddressId ||
-      cartItemIds.length === 0
-    ) {
+    if (!selectedAddressId || cartItemIds.length === 0) {
       return;
     }
 
-    try {
-      setIsPlacingOrder(true);
-      setErrorMessage("");
+    setActionErrorMessage("");
 
-      const response = await createOrders({
+    try {
+      const response = await placeOrderMutation.mutateAsync({
         addressId: selectedAddressId,
         cartItemIds,
         paymentMethod,
@@ -168,14 +171,12 @@ function CheckoutPage() {
         },
       });
     } catch (error) {
-      setErrorMessage(
+      setActionErrorMessage(
         getApiErrorMessage(
           error,
           "Không thể đặt hàng.",
         ),
       );
-    } finally {
-      setIsPlacingOrder(false);
     }
   }
 

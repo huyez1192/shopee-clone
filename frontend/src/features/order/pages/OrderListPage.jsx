@@ -1,4 +1,5 @@
-import {useCallback, useEffect, useMemo, useState,} from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import EmptyState from "../../../components/common/EmptyState";
@@ -6,65 +7,41 @@ import ErrorState from "../../../components/common/ErrorState";
 import LoadingState from "../../../components/common/LoadingState";
 
 import { getApiErrorMessage } from "../../../utils/getApiErrorMessage";
+import { queryKeys } from "../../../query/queryKeys";
 
 import { getOrders } from "../api/orderApi";
 
 import OrderCard from "../components/OrderCard";
 
-import {filterOrdersByTab, ORDER_TABS,} from "../utils/orderListUtils";
+import { filterOrdersByTab, ORDER_TABS } from "../utils/orderListUtils";
 
 import styles from "./OrderListPage.module.css";
 
 function OrderListPage() {
-  const [orders, setOrders] = useState([]);
+  const [activeTab, setActiveTab] = useState("all");
 
-  const [activeTab, setActiveTab] =
-    useState("all");
+  const {
+    data: orders = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: queryKeys.orders.all,
+    queryFn: getOrders,
+    select: (response) => Array.isArray(response) ? response : [],
+  });
 
-  const [isLoading, setIsLoading] =
-    useState(true);
+  const errorMessage = error
+    ? getApiErrorMessage(error, "Không thể tải danh sách đơn hàng.")
+    : "";
 
-  const [errorMessage, setErrorMessage] =
-    useState("");
-
-  const loadOrders = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setErrorMessage("");
-
-      const response = await getOrders();
-
-      setOrders(
-        Array.isArray(response)
-          ? response
-          : [],
-      );
-    } catch (error) {
-      setErrorMessage(
-        getApiErrorMessage(
-          error,
-          "Không thể tải danh sách đơn hàng.",
-        ),
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadOrders();
-  }, [loadOrders]);
+  function loadOrders() {
+    refetch();
+  }
 
   const filteredOrders = useMemo(
-    () =>
-      filterOrdersByTab(
-        orders,
-        activeTab,
-      ),
-    [
-      orders,
-      activeTab,
-    ],
+    () => filterOrdersByTab(orders, activeTab),
+    [orders, activeTab],
   );
 
   if (isLoading) {
