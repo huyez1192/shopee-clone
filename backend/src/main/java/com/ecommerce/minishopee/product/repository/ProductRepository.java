@@ -164,6 +164,38 @@ public interface ProductRepository
             Pageable pageable
     );
 
+    @Query(
+            value = """
+                    SELECT p FROM Product p
+                    LEFT JOIN Review r ON r.product = p
+                    WHERE p.status = :productStatus
+                      AND p.shop.status = :shopStatus
+                      AND p.shop.owner.status = :ownerStatus
+                      AND p.category.status = :categoryStatus
+                      AND EXISTS (SELECT pv.id FROM ProductVariant pv
+                                  WHERE pv.product = p AND pv.status IN :variantStatuses)
+                    GROUP BY p
+                    ORDER BY COALESCE(AVG(r.rating), 0) DESC, p.id DESC
+                    """,
+            countQuery = """
+                    SELECT COUNT(p) FROM Product p
+                    WHERE p.status = :productStatus
+                      AND p.shop.status = :shopStatus
+                      AND p.shop.owner.status = :ownerStatus
+                      AND p.category.status = :categoryStatus
+                      AND EXISTS (SELECT pv.id FROM ProductVariant pv
+                                  WHERE pv.product = p AND pv.status IN :variantStatuses)
+                    """
+    )
+    Page<Product> findPublicProductsPageByRatingDesc(
+            @Param("productStatus") ProductStatus productStatus,
+            @Param("shopStatus") ShopStatus shopStatus,
+            @Param("ownerStatus") UserStatus ownerStatus,
+            @Param("categoryStatus") CategoryStatus categoryStatus,
+            @Param("variantStatuses") Collection<ProductVariantStatus> variantStatuses,
+            Pageable pageable
+    );
+
     // =====================================================
     // SELLER PRODUCT
     // =====================================================

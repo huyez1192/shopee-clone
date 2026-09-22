@@ -28,7 +28,9 @@ public class ProductMapper {
                                              BigDecimal minPrice,
                                              BigDecimal maxPrice,
                                              Long totalStock,
-                                             Integer variantCount) {
+                                             Integer variantCount,
+                                             double averageRating,
+                                             long reviewCount) {
         return ProductResponse.builder()
                 .id(product.getId())
                 .name(product.getName())
@@ -44,6 +46,8 @@ public class ProductMapper {
                 .maxPrice(maxPrice)
                 .totalStock(totalStock)
                 .variantCount(variantCount)
+                .averageRating(averageRating)
+                .reviewCount(reviewCount)
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
                 .build();

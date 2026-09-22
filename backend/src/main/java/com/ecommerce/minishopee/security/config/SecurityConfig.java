@@ -56,6 +56,10 @@ public class SecurityConfig {
                             // Xem sản phẩm
                             .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
 
+                            // Buyer đã đăng nhập (kể cả tài khoản SELLER) có thể tạo review.
+                            .requestMatchers(HttpMethod.POST, "/api/reviews")
+                            .authenticated()
+
                             // Xem danh mục
                             .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
 

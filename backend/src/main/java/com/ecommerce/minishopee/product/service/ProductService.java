@@ -178,8 +178,20 @@ public class ProductService {
             return getProductsSortedByPrice(page, size, normalizedDirection);
         }
 
+        if (normalizedSortBy.equalsIgnoreCase("rating_desc")) {
+            Page<Product> productPage = productRepository.findPublicProductsPageByRatingDesc(
+                    ProductStatus.ACTIVE,
+                    ShopStatus.APPROVED,
+                    UserStatus.ACTIVE,
+                    CategoryStatus.ACTIVE,
+                    PUBLIC_VARIANT_STATUSES,
+                    PageRequest.of(page, size)
+            );
+            return toPageResponse(productPage);
+        }
+
         if (!ALLOWED_PRODUCT_SORT_FIELDS.contains(normalizedSortBy)) {
-            throw new BadRequestException("sortBy chỉ chấp nhận: " + "name, createdAt, updatedAt hoặc price.");
+            throw new BadRequestException("sortBy chỉ chấp nhận: name, createdAt, updatedAt, price hoặc rating_desc.");
         }
 
         Sort sort = normalizedDirection.equalsIgnoreCase("desc")
@@ -197,11 +209,12 @@ public class ProductService {
                                         pageable
                                     );
 
-        List<ProductResponse> content = productResponseAssembler.toPublicResponses(productPage.getContent());
+        return toPageResponse(productPage);
+    }
 
-        return PageResponse
-                .<ProductResponse>builder()
-                .content(content)
+    private PageResponse<ProductResponse> toPageResponse(Page<Product> productPage) {
+        return PageResponse.<ProductResponse>builder()
+                .content(productResponseAssembler.toPublicResponses(productPage.getContent()))
                 .pageNumber(productPage.getNumber())
                 .pageSize(productPage.getSize())
                 .totalElements(productPage.getTotalElements())

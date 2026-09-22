@@ -19,6 +19,7 @@ import com.ecommerce.minishopee.product.entity.Product;
 import com.ecommerce.minishopee.product.entity.ProductVariant;
 import com.ecommerce.minishopee.product.enums.ProductVariantStatus;
 import com.ecommerce.minishopee.product.repository.ProductVariantRepository;
+import com.ecommerce.minishopee.review.repository.ReviewRepository;
 import com.ecommerce.minishopee.shop.entity.Shop;
 import com.ecommerce.minishopee.shop.enums.ShopStatus;
 import com.ecommerce.minishopee.shop.repository.ShopRepository;
@@ -45,6 +46,8 @@ class OrderConsistencyServiceTests {
     private ProductVariantRepository variantRepository;
     @Mock
     private ShopRepository shopRepository;
+    @Mock
+    private ReviewRepository reviewRepository;
 
     private final OrderPaymentPolicy paymentPolicy = new OrderPaymentPolicy();
     private BuyerOrderService buyerService;
@@ -55,7 +58,7 @@ class OrderConsistencyServiceTests {
 
     @BeforeEach
     void setUp() {
-        buyerService = new BuyerOrderService(orderRepository, variantRepository, paymentPolicy);
+        buyerService = new BuyerOrderService(orderRepository, variantRepository, paymentPolicy, reviewRepository);
         sellerService = new SellerOrderService(orderRepository, shopRepository, variantRepository, paymentPolicy);
         adminService = new AdminOrderService(orderRepository, variantRepository, paymentPolicy);
 

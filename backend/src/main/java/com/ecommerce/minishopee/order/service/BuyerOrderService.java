@@ -14,6 +14,8 @@ import com.ecommerce.minishopee.order.exception.OrderNotFoundException;
 import com.ecommerce.minishopee.order.mapper.OrderMapper;
 import com.ecommerce.minishopee.order.repository.OrderRepository;
 import com.ecommerce.minishopee.product.repository.ProductVariantRepository;
+import com.ecommerce.minishopee.review.repository.OrderItemReviewProjection;
+import com.ecommerce.minishopee.review.repository.ReviewRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,15 +31,18 @@ public class BuyerOrderService {
     private final OrderRepository orderRepository;
     private final ProductVariantRepository productVariantRepository;
     private final OrderPaymentPolicy orderPaymentPolicy;
+    private final ReviewRepository reviewRepository;
 
     public BuyerOrderService(
             OrderRepository orderRepository,
             ProductVariantRepository productVariantRepository,
-            OrderPaymentPolicy orderPaymentPolicy
+            OrderPaymentPolicy orderPaymentPolicy,
+            ReviewRepository reviewRepository
     ) {
         this.orderRepository = orderRepository;
         this.productVariantRepository = productVariantRepository;
         this.orderPaymentPolicy = orderPaymentPolicy;
+        this.reviewRepository = reviewRepository;
     }
 
     /*
@@ -56,8 +61,9 @@ public class BuyerOrderService {
             orders = orderRepository.findAllDetailedByBuyerIdAndStatus(currentUser.getId(), status);
         }
 
+        Map<Long, Long> reviewIds = findReviewIds(orders);
         return orders.stream()
-                .map(OrderMapper::toResponse)
+                .map(order -> OrderMapper.toResponse(order, reviewIds))
                 .toList();
     }
 
@@ -70,7 +76,7 @@ public class BuyerOrderService {
         Order order = orderRepository.findDetailedByIdAndBuyerId(orderId, currentUser.getId())
                         .orElseThrow(() -> new OrderNotFoundException(orderId));
 
-        return OrderMapper.toResponse(order);
+        return OrderMapper.toResponse(order, findReviewIds(List.of(order)));
     }
 
     /*
@@ -191,5 +197,20 @@ public class BuyerOrderService {
         }
 
         return reason.trim();
+    }
+
+    private Map<Long, Long> findReviewIds(List<Order> orders) {
+        List<Long> orderItemIds = orders.stream()
+                .flatMap(order -> order.getItems().stream())
+                .map(OrderItem::getId)
+                .toList();
+        if (orderItemIds.isEmpty()) {
+            return Map.of();
+        }
+        return reviewRepository.findReviewIdsByOrderItemIds(orderItemIds).stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        OrderItemReviewProjection::getOrderItemId,
+                        OrderItemReviewProjection::getReviewId
+                ));
     }
 }

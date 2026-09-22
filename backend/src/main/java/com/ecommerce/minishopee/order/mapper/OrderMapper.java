@@ -7,6 +7,7 @@ import com.ecommerce.minishopee.order.entity.Order;
 import com.ecommerce.minishopee.order.entity.OrderItem;
 
 import java.util.List;
+import java.util.Map;
 
 public class OrderMapper {
 
@@ -14,9 +15,13 @@ public class OrderMapper {
     }
 
     public static OrderResponse toResponse(Order order) {
+        return toResponse(order, Map.of());
+    }
+
+    public static OrderResponse toResponse(Order order, Map<Long, Long> reviewIdsByOrderItemId) {
         List<OrderItemResponse> items = order.getItems()
                                                 .stream()
-                                                .map(OrderMapper::toItemResponse)
+                                                .map(item -> toItemResponse(item, reviewIdsByOrderItemId))
                                                 .toList();
 
         int totalQuantity = items.stream()
@@ -59,7 +64,8 @@ public class OrderMapper {
                 .build();
     }
 
-    private static OrderItemResponse toItemResponse(OrderItem item) {
+    private static OrderItemResponse toItemResponse(OrderItem item, Map<Long, Long> reviewIdsByOrderItemId) {
+        Long reviewId = reviewIdsByOrderItemId.get(item.getId());
         return OrderItemResponse.builder()
                 .id(item.getId())
                 .productId(item.getProduct().getId())
@@ -76,6 +82,8 @@ public class OrderMapper {
                 .unitPrice(item.getUnitPrice())
                 .quantity(item.getQuantity())
                 .lineTotal(item.getLineTotal())
+                .reviewed(reviewId != null)
+                .reviewId(reviewId)
                 .build();
     }
 }

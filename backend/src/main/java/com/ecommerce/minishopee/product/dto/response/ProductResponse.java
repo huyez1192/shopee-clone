@@ -40,6 +40,10 @@ public class ProductResponse {
 
     private Integer variantCount;
 
+    private Double averageRating;
+
+    private Long reviewCount;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

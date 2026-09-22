@@ -36,4 +36,8 @@ public class OrderItemResponse {
     private Integer quantity;
 
     private BigDecimal lineTotal;
+
+    private boolean reviewed;
+
+    private Long reviewId;
 }

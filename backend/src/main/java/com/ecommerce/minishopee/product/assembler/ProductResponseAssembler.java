@@ -6,6 +6,9 @@ import com.ecommerce.minishopee.product.entity.ProductVariant;
 import com.ecommerce.minishopee.product.enums.ProductVariantStatus;
 import com.ecommerce.minishopee.product.mapper.ProductMapper;
 import com.ecommerce.minishopee.product.repository.ProductVariantRepository;
+import com.ecommerce.minishopee.review.dto.response.ProductRatingSummary;
+import com.ecommerce.minishopee.review.repository.ProductRatingProjection;
+import com.ecommerce.minishopee.review.repository.ReviewRepository;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -40,9 +43,14 @@ public class ProductResponseAssembler {
             );
 
     private final ProductVariantRepository productVariantRepository;
+    private final ReviewRepository reviewRepository;
 
-    public ProductResponseAssembler(ProductVariantRepository productVariantRepository) {
+    public ProductResponseAssembler(
+            ProductVariantRepository productVariantRepository,
+            ReviewRepository reviewRepository
+    ) {
         this.productVariantRepository = productVariantRepository;
+        this.reviewRepository = reviewRepository;
     }
 
     // =====================================================
@@ -75,8 +83,10 @@ public class ProductResponseAssembler {
 
     private ProductResponse toResponse(Product product, Collection<ProductVariantStatus> statuses) {
         List<ProductVariant> variants = productVariantRepository.findAllByProduct_IdAndStatusIn(product.getId(), statuses);
+        ProductRatingSummary rating = ratingSummaries(List.of(product.getId()))
+                .getOrDefault(product.getId(), ProductRatingSummary.EMPTY);
 
-        return buildResponse(product, variants);
+        return buildResponse(product, variants, rating);
     }
 
     private List<ProductResponse> toResponses(List<Product> products, Collection<ProductVariantStatus> statuses) {
@@ -104,21 +114,30 @@ public class ProductResponseAssembler {
                                 )
                         );
 
+        Map<Long, ProductRatingSummary> ratingsByProductId = ratingSummaries(productIds);
+
         return products.stream()
                 .map(product ->
                         buildResponse(
                                 product,
-                                variantsByProductId
+                                        variantsByProductId
                                         .getOrDefault(
                                                 product.getId(),
                                                 List.of()
+                                                ),
+                                        ratingsByProductId.getOrDefault(
+                                                product.getId(), ProductRatingSummary.EMPTY
                                         )
                         )
                 )
                 .toList();
     }
 
-    private ProductResponse buildResponse(Product product, List<ProductVariant> variants) {
+    private ProductResponse buildResponse(
+            Product product,
+            List<ProductVariant> variants,
+            ProductRatingSummary rating
+    ) {
         BigDecimal minPrice =
                 variants.stream()
                         .map(ProductVariant::getPrice)
@@ -145,7 +164,20 @@ public class ProductResponseAssembler {
                 minPrice,
                 maxPrice,
                 totalStock,
-                variants.size()
+                variants.size(),
+                rating.averageRating(),
+                rating.reviewCount()
         );
+    }
+
+    private Map<Long, ProductRatingSummary> ratingSummaries(List<Long> productIds) {
+        return reviewRepository.summarizeByProductIds(productIds).stream()
+                .collect(Collectors.toMap(
+                        ProductRatingProjection::getProductId,
+                        row -> new ProductRatingSummary(
+                                row.getAverageRating() == null ? 0.0 : row.getAverageRating(),
+                                row.getReviewCount() == null ? 0L : row.getReviewCount()
+                        )
+                ));
     }
 }

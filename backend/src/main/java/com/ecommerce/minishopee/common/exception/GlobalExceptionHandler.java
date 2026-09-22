@@ -6,6 +6,10 @@ import com.ecommerce.minishopee.category.exception.CategoryNotFoundException;
 import com.ecommerce.minishopee.order.exception.OrderNotFoundException;
 import com.ecommerce.minishopee.product.exception.ProductNotFoundException;
 import com.ecommerce.minishopee.product.exception.ProductVariantNotFoundException;
+import com.ecommerce.minishopee.review.exception.OrderItemNotFoundException;
+import com.ecommerce.minishopee.review.exception.ReviewAccessDeniedException;
+import com.ecommerce.minishopee.review.exception.ReviewConflictException;
+import com.ecommerce.minishopee.review.exception.ReviewNotFoundException;
 import com.ecommerce.minishopee.shop.exception.ShopNotFoundException;
 import com.ecommerce.minishopee.user.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,6 +27,37 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler({ReviewNotFoundException.class, OrderItemNotFoundException.class})
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, Object> handleReviewNotFound(RuntimeException exception, HttpServletRequest request) {
+        return error(HttpStatus.NOT_FOUND, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(ReviewConflictException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, Object> handleReviewConflict(ReviewConflictException exception, HttpServletRequest request) {
+        return error(HttpStatus.CONFLICT, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(ReviewAccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Map<String, Object> handleReviewAccessDenied(
+            ReviewAccessDeniedException exception,
+            HttpServletRequest request
+    ) {
+        return error(HttpStatus.FORBIDDEN, exception.getMessage(), request);
+    }
+
+    private Map<String, Object> error(HttpStatus status, String message, HttpServletRequest request) {
+        Map<String, Object> error = new LinkedHashMap<>();
+        error.put("timestamp", LocalDateTime.now());
+        error.put("status", status.value());
+        error.put("error", status.getReasonPhrase());
+        error.put("message", message);
+        error.put("path", request.getRequestURI());
+        return error;
+    }
 
     @ExceptionHandler(ProductNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
