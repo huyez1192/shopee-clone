@@ -1,0 +1,16 @@
+.backdrop { position: fixed; z-index: 1000; inset: 0; display: grid; padding: 20px; place-items: center; background: rgba(0,0,0,.45); }
+.modal { width: min(720px, 100%); padding: 32px 38px 24px; background: #fff; border-radius: 3px; box-shadow: 0 4px 18px rgba(0,0,0,.22); }
+.modal h2 { margin: 0 0 24px; font-size: 24px; font-weight: 400; }
+.product { display: flex; margin-bottom: 18px; align-items: center; gap: 14px; }
+.product img { width: 64px; height: 64px; object-fit: cover; }
+.product div { display: flex; flex-direction: column; gap: 8px; }
+.product strong { font-size: 14px; font-weight: 500; }
+.product span { color: #777; font-size: 13px; }
+.modal > div[aria-label] { margin-bottom: 18px; }
+.modal textarea { width: 100%; min-height: 140px; padding: 16px; resize: vertical; border: 1px solid #ddd; outline-color: #ee4d2d; font: inherit; line-height: 1.5; box-sizing: border-box; }
+.count { margin-top: -24px; padding-right: 10px; color: #aaa; text-align: right; font-size: 11px; }
+.error { color: #d93025; font-size: 13px; }
+.actions { display: flex; margin-top: 30px; justify-content: flex-end; gap: 12px; }
+.actions button { min-width: 145px; height: 43px; border: 0; background: #fff; cursor: pointer; }
+.actions button[type="submit"] { color: #fff; background: #ee4d2d; }
+.actions button:disabled { opacity: .65; cursor: wait; }

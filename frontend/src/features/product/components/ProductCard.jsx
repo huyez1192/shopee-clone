@@ -82,6 +82,11 @@ function ProductCard({ product }) {
         </div>
 
         <div className={styles.bottom}>
+          <span className={styles.rating}>
+            {Number(product.reviewCount) > 0
+              ? `${Number(product.averageRating || 0).toFixed(1)} ★ (${product.reviewCount})`
+              : "Chưa có đánh giá"}
+          </span>
           <span className={styles.shopName}>
             {product.shopName}
           </span>

@@ -32,11 +32,22 @@ export const queryKeys = {
     detail: (orderId) => ["orders", orderId],
   },
 
+  reviews: {
+    all: ["reviews"],
+    product: (productId, params = {}) => ["reviews", "product", productId, params],
+    productRoot: (productId) => ["reviews", "product", productId],
+    summary: (productId) => ["reviews", "summary", productId],
+  },
+
   payment: {
     detail: (paymentCode) => ["payment", paymentCode],
   },
 
   seller: {
+    reviews: {
+      all: ["seller", "reviews"],
+      list: (params = {}) => ["seller", "reviews", params],
+    },
     orders: {
       all: ["seller", "orders"],
       detail: (orderId) => ["seller", "orders", orderId],

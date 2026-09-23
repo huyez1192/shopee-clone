@@ -17,6 +17,7 @@ import styles from "./ProductDetailPage.module.css";
 
 import useAuth from "../../auth/hooks/useAuth";
 import { addCartItem } from "../../cart/api/cartApi";
+import ProductReviews from "../../review/components/ProductReviews";
 
 function formatPrice(price) {
   if (price == null) {
@@ -363,7 +364,9 @@ function ProductDetailPage() {
 
             <div className={styles.meta}>
               <span className={styles.ratingPlaceholder}>
-                Chưa có đánh giá
+                {product.reviewCount > 0
+                  ? `${Number(product.averageRating || 0).toFixed(1)} ★ · ${product.reviewCount} đánh giá`
+                  : "Chưa có đánh giá"}
               </span>
 
               <span className={styles.metaDivider} />
@@ -634,6 +637,8 @@ function ProductDetailPage() {
               "Sản phẩm chưa có mô tả."}
           </div>
         </section>
+
+        <ProductReviews productId={productId} />
       </div>
     </main>
   );

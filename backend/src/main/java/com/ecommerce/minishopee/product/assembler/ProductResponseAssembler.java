@@ -176,7 +176,8 @@ public class ProductResponseAssembler {
                         ProductRatingProjection::getProductId,
                         row -> new ProductRatingSummary(
                                 row.getAverageRating() == null ? 0.0 : row.getAverageRating(),
-                                row.getReviewCount() == null ? 0L : row.getReviewCount()
+                                row.getReviewCount() == null ? 0L : row.getReviewCount(),
+                                0L, 0L, 0L, 0L, 0L
                         )
                 ));
     }

@@ -1,0 +1,18 @@
+.section { margin-top: 16px; padding: 24px 28px 36px; background: #fff; }
+.section h2 { margin: 0 0 20px; color: #333; font-size: 18px; font-weight: 400; }
+.summary { display: flex; min-height: 150px; padding: 28px 36px; align-items: center; gap: 55px; background: #fff8f6; border: 1px solid #f9e4df; }
+.score { min-width: 140px; text-align: center; color: #ee4d2d; font-size: 17px; }
+.score strong { font-size: 30px; font-weight: 400; }
+.score > div:last-child { margin-top: 8px; font-size: 22px; }
+.filters { display: flex; flex-wrap: wrap; gap: 10px; }
+.filters button { min-width: 105px; height: 34px; padding: 0 14px; background: #fff; border: 1px solid #ddd; color: #444; cursor: pointer; }
+.filters .activeFilter { border-color: #ee4d2d; color: #ee4d2d; }
+.review { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 14px; padding: 24px 20px; border-bottom: 1px solid #eee; }
+.review > img { width: 42px; height: 42px; object-fit: cover; border-radius: 50%; border: 1px solid #eee; }
+.buyer { margin-bottom: 4px; font-size: 13px; }
+.review [aria-label] { font-size: 15px; }
+.date { margin-top: 6px; color: #999; font-size: 12px; }
+.review p { margin: 14px 0 0; color: #333; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+.reply { margin-top: 18px; padding: 14px; background: #f5f5f5; font-size: 13px; }
+.reply p { margin-top: 7px; }
+@media (max-width: 700px) { .summary { align-items: flex-start; flex-direction: column; gap: 20px; padding: 20px; } .section { padding: 20px 14px; } }

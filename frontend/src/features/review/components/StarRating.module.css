@@ -1,0 +1,4 @@
+.stars { display: inline-flex; gap: 2px; color: #ee4d2d; }
+.stars button { padding: 0; background: none; border: 0; cursor: pointer; font-size: 30px; }
+.filled { color: #ee4d2d; }
+.empty { color: transparent; -webkit-text-stroke: 1px #ee4d2d; }

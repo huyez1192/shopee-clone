@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
@@ -8,6 +9,7 @@ import ErrorState from "../../../components/common/ErrorState";
 
 import { queryKeys } from "../../../query/queryKeys";
 import { getOrderById } from "../api/orderApi";
+import BuyerReviewModal from "../../review/components/BuyerReviewModal";
 
 import styles from "./OrderDetailPage.module.css";
 
@@ -82,6 +84,7 @@ function getCurrentStep(order) {
 function OrderDetailPage() {
   const { orderId } = useParams();
   const navigate = useNavigate();
+  const [reviewItem, setReviewItem] = useState(null);
 
   const {
     data: order = null,
@@ -125,6 +128,7 @@ function OrderDetailPage() {
 
   const cancelled = order.status === "CANCELLED";
   const currentStep = getCurrentStep(order);
+  const nextReviewItem = order.items?.find((item) => !item.reviewed);
 
   const steps = [
     {
@@ -405,14 +409,11 @@ function OrderDetailPage() {
                 >
                   {order.status ===
                     "COMPLETED" && (
-                    <Link
-                      to="/products"
-                      className={
-                        styles.primaryButton
-                      }
-                    >
-                      Mua Lại
-                    </Link>
+                    nextReviewItem ? (
+                      <button type="button" className={styles.primaryButton} onClick={() => setReviewItem(nextReviewItem)}>
+                        Đánh Giá
+                      </button>
+                    ) : <span className={styles.reviewedLabel}>Đã đánh giá</span>
                   )}
 
                   <Link
@@ -561,6 +562,7 @@ function OrderDetailPage() {
           )}
         </section>
       </div>
+      {reviewItem && <BuyerReviewModal item={reviewItem} orderId={orderId} onClose={() => setReviewItem(null)} />}
     </main>
   );
 }

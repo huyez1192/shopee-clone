@@ -34,6 +34,7 @@ import SellerOrderDetailPage from "../features/seller/order/pages/SellerOrderDet
 import SellerProductCreatePage from "../features/seller/product/pages/SellerProductCreatePage";
 import SellerProductListPage from "../features/seller/product/pages/SellerProductListPage";
 import SellerInventoryPage from "../features/seller/inventory/pages/SellerInventoryPage";
+import SellerReviewPage from "../features/seller/review/pages/SellerReviewPage";
 
 
 const router = createBrowserRouter([
@@ -167,6 +168,10 @@ const router = createBrowserRouter([
             {
               path: "inventory",
               element: <SellerInventoryPage />,
+            },
+            {
+              path: "reviews",
+              element: <SellerReviewPage />,
             },
           ],
         },

@@ -65,6 +65,14 @@ function SellerLayout() {
           </div>
 
           <div className={styles.menuGroup}>
+            <strong>★ Quản Lý Đánh Giá</strong>
+
+            <Link to="/seller/reviews">
+              Đánh Giá Shop
+            </Link>
+          </div>
+
+          <div className={styles.menuGroup}>
             <strong>▱ Tài chính</strong>
 
             <span>Doanh thu</span>

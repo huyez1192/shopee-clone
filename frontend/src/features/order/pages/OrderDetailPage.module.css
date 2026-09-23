@@ -310,7 +310,10 @@
   background: #ee4d2d;
 
   border: 1px solid #ee4d2d;
+  cursor: pointer;
 }
+
+.reviewedLabel { color: #26aa99; font-size: 12px; }
 
 .secondaryButton {
   color: #555;

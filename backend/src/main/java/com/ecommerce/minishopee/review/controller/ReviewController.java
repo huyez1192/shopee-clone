@@ -3,6 +3,7 @@ package com.ecommerce.minishopee.review.controller;
 import com.ecommerce.minishopee.common.dto.PageResponse;
 import com.ecommerce.minishopee.review.dto.request.CreateReviewRequest;
 import com.ecommerce.minishopee.review.dto.response.ReviewResponse;
+import com.ecommerce.minishopee.review.dto.response.ProductRatingSummary;
 import com.ecommerce.minishopee.review.service.ReviewService;
 import com.ecommerce.minishopee.user.entity.AppUser;
 import jakarta.validation.Valid;
@@ -31,8 +32,14 @@ public class ReviewController {
     public PageResponse<ReviewResponse> getProductReviews(
             @PathVariable Long productId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Integer rating
     ) {
-        return reviewService.getProductReviews(productId, page, size);
+        return reviewService.getProductReviews(productId, page, size, rating);
+    }
+
+    @GetMapping("/api/products/{productId}/reviews/summary")
+    public ProductRatingSummary getProductRatingSummary(@PathVariable Long productId) {
+        return reviewService.getProductRatingSummary(productId);
     }
 }
