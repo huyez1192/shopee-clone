@@ -20,6 +20,7 @@ import com.ecommerce.minishopee.product.entity.ProductVariant;
 import com.ecommerce.minishopee.product.enums.ProductVariantStatus;
 import com.ecommerce.minishopee.product.repository.ProductVariantRepository;
 import com.ecommerce.minishopee.review.repository.ReviewRepository;
+import com.ecommerce.minishopee.notification.service.NotificationService;
 import com.ecommerce.minishopee.shop.entity.Shop;
 import com.ecommerce.minishopee.shop.enums.ShopStatus;
 import com.ecommerce.minishopee.shop.repository.ShopRepository;
@@ -48,6 +49,8 @@ class OrderConsistencyServiceTests {
     private ShopRepository shopRepository;
     @Mock
     private ReviewRepository reviewRepository;
+    @Mock
+    private NotificationService notificationService;
 
     private final OrderPaymentPolicy paymentPolicy = new OrderPaymentPolicy();
     private BuyerOrderService buyerService;
@@ -58,9 +61,9 @@ class OrderConsistencyServiceTests {
 
     @BeforeEach
     void setUp() {
-        buyerService = new BuyerOrderService(orderRepository, variantRepository, paymentPolicy, reviewRepository);
-        sellerService = new SellerOrderService(orderRepository, shopRepository, variantRepository, paymentPolicy);
-        adminService = new AdminOrderService(orderRepository, variantRepository, paymentPolicy);
+        buyerService = new BuyerOrderService(orderRepository, variantRepository, paymentPolicy, reviewRepository, notificationService);
+        sellerService = new SellerOrderService(orderRepository, shopRepository, variantRepository, paymentPolicy, notificationService);
+        adminService = new AdminOrderService(orderRepository, variantRepository, paymentPolicy, notificationService);
 
         buyer = new AppUser();
         buyer.setId(10L);
@@ -92,6 +95,7 @@ class OrderConsistencyServiceTests {
         prepareSeller(cod);
         sellerService.confirmOrder(cod.getId(), buyer);
         assertEquals(OrderStatus.CONFIRMED, cod.getStatus());
+        verify(notificationService, times(2)).notifyOrderConfirmed(any(Order.class));
     }
 
     @Test
@@ -102,6 +106,7 @@ class OrderConsistencyServiceTests {
         assertThrows(BadRequestException.class,
                 () -> adminService.updateOrderStatus(order.getId(), statusRequest(OrderStatus.CONFIRMED)));
         assertEquals(OrderStatus.PENDING, order.getStatus());
+        verifyNoInteractions(notificationService);
     }
 
     @Test
@@ -125,6 +130,7 @@ class OrderConsistencyServiceTests {
         assertUnchangedAfterRejectedCancellation(adminOrder, 6);
 
         verifyNoInteractions(variantRepository);
+        verifyNoInteractions(notificationService);
     }
 
     @Test
@@ -155,6 +161,7 @@ class OrderConsistencyServiceTests {
         assertUnchangedAfterRejectedCancellation(sellerOrder, 8);
         assertUnchangedAfterRejectedCancellation(adminOrder, 9);
         verifyNoInteractions(variantRepository);
+        verifyNoInteractions(notificationService);
     }
 
     @Test
@@ -178,6 +185,8 @@ class OrderConsistencyServiceTests {
         assertEquals(OrderStatus.CANCELLED, sellerOrder.getStatus());
         assertEquals(6, sellerVariant.getStockQuantity());
         assertNotNull(sellerOrder.getCancelledAt());
+        verify(notificationService).notifyOrderCancelledToSeller(buyerOrder);
+        verify(notificationService).notifyOrderCancelledToBuyer(sellerOrder, false);
     }
 
     @Test
@@ -209,6 +218,9 @@ class OrderConsistencyServiceTests {
 
         assertEquals(OrderStatus.COMPLETED, order.getStatus());
         assertEquals(PaymentStatus.PAID, order.getPaymentStatus());
+        verify(notificationService).notifyOrderConfirmed(order);
+        verify(notificationService).notifyOrderShipping(order);
+        verify(notificationService).notifyOrderCompleted(order);
     }
 
     @Test

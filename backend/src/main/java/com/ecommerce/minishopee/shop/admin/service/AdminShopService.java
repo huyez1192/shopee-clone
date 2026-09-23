@@ -11,6 +11,7 @@ import com.ecommerce.minishopee.shop.mapper.ShopMapper;
 import com.ecommerce.minishopee.user.repository.AppUserRepository;
 import com.ecommerce.minishopee.shop.repository.ShopRepository;
 import com.ecommerce.minishopee.user.enums.Role;
+import com.ecommerce.minishopee.notification.service.NotificationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,10 +22,16 @@ public class AdminShopService {
 
     private final ShopRepository shopRepository;
     private final AppUserRepository appUserRepository;
+    private final NotificationService notificationService;
 
-    public AdminShopService(ShopRepository shopRepository, AppUserRepository appUserRepository) {
+    public AdminShopService(
+            ShopRepository shopRepository,
+            AppUserRepository appUserRepository,
+            NotificationService notificationService
+    ) {
         this.shopRepository = shopRepository;
         this.appUserRepository = appUserRepository;
+        this.notificationService = notificationService;
     }
 
     // admin xem tất cả shop
@@ -68,6 +75,8 @@ public class AdminShopService {
         appUserRepository.save(owner);
         Shop updatedshop = shopRepository.save(shop);
 
+        notificationService.notifyShopApproved(updatedshop);
+
         return ShopMapper.toResponse(updatedshop);
     }
 
@@ -85,6 +94,8 @@ public class AdminShopService {
         shop.setRejectionReason(request.getReason().trim());
 
         Shop updatedShop = shopRepository.save(shop);
+
+        notificationService.notifyShopRejected(updatedShop);
 
         return ShopMapper.toResponse(updatedShop);
     }

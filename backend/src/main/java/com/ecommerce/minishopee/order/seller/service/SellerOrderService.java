@@ -19,6 +19,7 @@ import com.ecommerce.minishopee.shop.exception.ShopNotFoundException;
 import com.ecommerce.minishopee.order.mapper.OrderMapper;
 import com.ecommerce.minishopee.order.repository.OrderRepository;
 import com.ecommerce.minishopee.order.service.OrderPaymentPolicy;
+import com.ecommerce.minishopee.notification.service.NotificationService;
 import com.ecommerce.minishopee.product.repository.ProductVariantRepository;
 import com.ecommerce.minishopee.shop.repository.ShopRepository;
 import org.springframework.stereotype.Service;
@@ -37,17 +38,20 @@ public class SellerOrderService {
     private final ShopRepository shopRepository;
     private final ProductVariantRepository productVariantRepository;
     private final OrderPaymentPolicy orderPaymentPolicy;
+    private final NotificationService notificationService;
 
     public SellerOrderService(
             OrderRepository orderRepository,
             ShopRepository shopRepository,
             ProductVariantRepository productVariantRepository,
-            OrderPaymentPolicy orderPaymentPolicy
+            OrderPaymentPolicy orderPaymentPolicy,
+            NotificationService notificationService
     ) {
         this.orderRepository = orderRepository;
         this.shopRepository = shopRepository;
         this.productVariantRepository = productVariantRepository;
         this.orderPaymentPolicy = orderPaymentPolicy;
+        this.notificationService = notificationService;
     }
 
     /*
@@ -109,6 +113,8 @@ public class SellerOrderService {
 
         Order savedOrder = orderRepository.save(order);
 
+        notificationService.notifyOrderConfirmed(savedOrder);
+
         return OrderMapper.toResponse(savedOrder);
     }
 
@@ -130,6 +136,8 @@ public class SellerOrderService {
         order.setShippedAt(LocalDateTime.now());
 
         Order savedOrder = orderRepository.save(order);
+
+        notificationService.notifyOrderShipping(savedOrder);
 
         return OrderMapper.toResponse(savedOrder);
     }
@@ -162,6 +170,8 @@ public class SellerOrderService {
         }
 
         Order savedOrder = orderRepository.save(order);
+
+        notificationService.notifyOrderCompleted(savedOrder);
 
         return OrderMapper.toResponse(savedOrder);
     }
@@ -199,6 +209,8 @@ public class SellerOrderService {
         order.setCancelledAt(LocalDateTime.now());
 
         Order savedOrder = orderRepository.save(order);
+
+        notificationService.notifyOrderCancelledToBuyer(savedOrder, false);
 
         return OrderMapper.toResponse(savedOrder);
     }

@@ -12,6 +12,7 @@ import com.ecommerce.minishopee.review.exception.OrderItemNotFoundException;
 import com.ecommerce.minishopee.review.exception.ReviewAccessDeniedException;
 import com.ecommerce.minishopee.review.exception.ReviewConflictException;
 import com.ecommerce.minishopee.review.repository.ReviewRepository;
+import com.ecommerce.minishopee.notification.service.NotificationService;
 import com.ecommerce.minishopee.user.entity.AppUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ import static org.mockito.Mockito.*;
 class ReviewCreationProcessorTests {
     @Mock OrderItemRepository orderItemRepository;
     @Mock ReviewRepository reviewRepository;
+    @Mock NotificationService notificationService;
 
     ReviewCreationProcessor processor;
     AppUser buyer;
@@ -39,7 +41,7 @@ class ReviewCreationProcessorTests {
 
     @BeforeEach
     void setUp() {
-        processor = new ReviewCreationProcessor(orderItemRepository, reviewRepository);
+        processor = new ReviewCreationProcessor(orderItemRepository, reviewRepository, notificationService);
         buyer = new AppUser();
         buyer.setId(1L);
         buyer.setFullName("Buyer");
@@ -74,6 +76,7 @@ class ReviewCreationProcessorTests {
         assertEquals(9L, response.getId());
         assertEquals(3L, response.getProductId());
         assertEquals("Great", response.getComment());
+        verify(notificationService).notifyProductReviewed(any(Review.class));
     }
 
     @ParameterizedTest
@@ -104,5 +107,6 @@ class ReviewCreationProcessorTests {
         when(orderItemRepository.findDetailedById(2L)).thenReturn(Optional.of(item));
         when(reviewRepository.existsByOrderItem_Id(2L)).thenReturn(true);
         assertThrows(ReviewConflictException.class, () -> processor.create(buyer, request));
+        verify(notificationService, never()).notifyProductReviewed(any());
     }
 }

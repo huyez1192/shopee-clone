@@ -15,6 +15,7 @@ import com.ecommerce.minishopee.order.enums.OrderStatus;
 import com.ecommerce.minishopee.order.enums.PaymentMethod;
 import com.ecommerce.minishopee.order.enums.PaymentStatus;
 import com.ecommerce.minishopee.order.mapper.OrderMapper;
+import com.ecommerce.minishopee.notification.service.NotificationService;
 import com.ecommerce.minishopee.order.repository.OrderRepository;
 import com.ecommerce.minishopee.payment.entity.Payment;
 import com.ecommerce.minishopee.payment.service.PaymentService;
@@ -61,19 +62,22 @@ public class OrderService {
     private final ProductVariantRepository productVariantRepository;
     private final OrderRepository orderRepository;
     private final PaymentService paymentService;
+    private final NotificationService notificationService;
 
     public OrderService(
             AddressRepository addressRepository,
             CartItemRepository cartItemRepository,
             ProductVariantRepository productVariantRepository,
             OrderRepository orderRepository,
-            PaymentService paymentService
+            PaymentService paymentService,
+            NotificationService notificationService
     ) {
         this.addressRepository = addressRepository;
         this.cartItemRepository = cartItemRepository;
         this.productVariantRepository = productVariantRepository;
         this.orderRepository = orderRepository;
         this.paymentService = paymentService;
+        this.notificationService = notificationService;
     }
 
     /*
@@ -314,6 +318,8 @@ public class OrderService {
                 orderRepository.saveAll(
                         ordersToCreate
                 );
+
+        createdOrders.forEach(notificationService::notifyOrderCreated);
 
         /*
          * Các ProductVariant đang được quản lý

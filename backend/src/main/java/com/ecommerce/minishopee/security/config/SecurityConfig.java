@@ -149,6 +149,9 @@ public class SecurityConfig {
                             .requestMatchers("/api/addresses/**")
                             .authenticated()
 
+                            .requestMatchers("/api/notifications/**")
+                            .authenticated()
+
 
 
 

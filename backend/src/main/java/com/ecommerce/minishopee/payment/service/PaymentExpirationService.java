@@ -11,12 +11,14 @@ import com.ecommerce.minishopee.product.entity.ProductVariant;
 import com.ecommerce.minishopee.product.enums.ProductVariantStatus;
 import com.ecommerce.minishopee.product.repository.ProductVariantRepository;
 import com.ecommerce.minishopee.common.exception.BadRequestException;
+import com.ecommerce.minishopee.notification.service.NotificationService;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -26,15 +28,18 @@ public class PaymentExpirationService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final ProductVariantRepository productVariantRepository;
+    private final NotificationService notificationService;
 
     public PaymentExpirationService(
             PaymentRepository paymentRepository,
             OrderRepository orderRepository,
-            ProductVariantRepository productVariantRepository
+            ProductVariantRepository productVariantRepository,
+            NotificationService notificationService
     ) {
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
         this.productVariantRepository = productVariantRepository;
+        this.notificationService = notificationService;
     }
 
     public List<Long> findExpiredPaymentIds() {
@@ -103,6 +108,7 @@ public class PaymentExpirationService {
         restoreStock(quantityByVariantId);
 
         LocalDateTime cancelledAt = LocalDateTime.now();
+        List<Order> cancelledOrders = new ArrayList<>();
 
         for (Order order : lockedOrders) {
             if (order.getStatus() != OrderStatus.PENDING) {
@@ -116,12 +122,15 @@ public class PaymentExpirationService {
             order.setCancelReason(
                     "Phiên thanh toán SePay đã hết hạn."
             );
+            cancelledOrders.add(order);
         }
 
         payment.setStatus(PaymentSessionStatus.EXPIRED);
 
         paymentRepository.save(payment);
         orderRepository.saveAll(lockedOrders);
+
+        cancelledOrders.forEach(order -> notificationService.notifyOrderCancelledToBuyer(order, true));
     }
 
     private void restoreStock(Map<Long, Integer> quantityByVariantId) {

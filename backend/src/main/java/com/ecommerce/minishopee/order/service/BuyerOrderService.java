@@ -16,6 +16,7 @@ import com.ecommerce.minishopee.order.repository.OrderRepository;
 import com.ecommerce.minishopee.product.repository.ProductVariantRepository;
 import com.ecommerce.minishopee.review.repository.OrderItemReviewProjection;
 import com.ecommerce.minishopee.review.repository.ReviewRepository;
+import com.ecommerce.minishopee.notification.service.NotificationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,17 +33,20 @@ public class BuyerOrderService {
     private final ProductVariantRepository productVariantRepository;
     private final OrderPaymentPolicy orderPaymentPolicy;
     private final ReviewRepository reviewRepository;
+    private final NotificationService notificationService;
 
     public BuyerOrderService(
             OrderRepository orderRepository,
             ProductVariantRepository productVariantRepository,
             OrderPaymentPolicy orderPaymentPolicy,
-            ReviewRepository reviewRepository
+            ReviewRepository reviewRepository,
+            NotificationService notificationService
     ) {
         this.orderRepository = orderRepository;
         this.productVariantRepository = productVariantRepository;
         this.orderPaymentPolicy = orderPaymentPolicy;
         this.reviewRepository = reviewRepository;
+        this.notificationService = notificationService;
     }
 
     /*
@@ -165,6 +169,8 @@ public class BuyerOrderService {
          * Đơn PENDING/CONFIRMED vẫn đang UNPAID, nên không cần thay đổi paymentStatus.
          */
         Order savedOrder = orderRepository.save(order);
+
+        notificationService.notifyOrderCancelledToSeller(savedOrder);
 
         return OrderMapper.toResponse(savedOrder);
     }

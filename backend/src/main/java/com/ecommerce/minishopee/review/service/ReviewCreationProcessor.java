@@ -13,6 +13,7 @@ import com.ecommerce.minishopee.review.exception.ReviewConflictException;
 import com.ecommerce.minishopee.review.mapper.ReviewMapper;
 import com.ecommerce.minishopee.review.repository.ReviewRepository;
 import com.ecommerce.minishopee.user.entity.AppUser;
+import com.ecommerce.minishopee.notification.service.NotificationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,10 +21,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReviewCreationProcessor {
     private final OrderItemRepository orderItemRepository;
     private final ReviewRepository reviewRepository;
+    private final NotificationService notificationService;
 
-    public ReviewCreationProcessor(OrderItemRepository orderItemRepository, ReviewRepository reviewRepository) {
+    public ReviewCreationProcessor(
+            OrderItemRepository orderItemRepository,
+            ReviewRepository reviewRepository,
+            NotificationService notificationService
+    ) {
         this.orderItemRepository = orderItemRepository;
         this.reviewRepository = reviewRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -48,7 +55,9 @@ public class ReviewCreationProcessor {
         review.setRating(request.getRating());
         review.setComment(normalize(request.getComment()));
 
-        return ReviewMapper.toResponse(reviewRepository.saveAndFlush(review));
+        Review savedReview = reviewRepository.saveAndFlush(review);
+        notificationService.notifyProductReviewed(savedReview);
+        return ReviewMapper.toResponse(savedReview);
     }
 
     private String normalize(String value) {

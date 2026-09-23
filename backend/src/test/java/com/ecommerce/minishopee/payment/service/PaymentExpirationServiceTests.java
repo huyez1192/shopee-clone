@@ -10,6 +10,7 @@ import com.ecommerce.minishopee.payment.repository.PaymentRepository;
 import com.ecommerce.minishopee.product.entity.ProductVariant;
 import com.ecommerce.minishopee.product.enums.ProductVariantStatus;
 import com.ecommerce.minishopee.product.repository.ProductVariantRepository;
+import com.ecommerce.minishopee.notification.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,12 +31,13 @@ class PaymentExpirationServiceTests {
     @Mock private PaymentRepository paymentRepository;
     @Mock private OrderRepository orderRepository;
     @Mock private ProductVariantRepository variantRepository;
+    @Mock private NotificationService notificationService;
 
     private PaymentExpirationService service;
 
     @BeforeEach
     void setUp() {
-        service = new PaymentExpirationService(paymentRepository, orderRepository, variantRepository);
+        service = new PaymentExpirationService(paymentRepository, orderRepository, variantRepository, notificationService);
     }
 
     @Test
@@ -53,6 +55,7 @@ class PaymentExpirationServiceTests {
         service.expirePayment(payment.getId());
 
         assertEquals(PaymentSessionStatus.EXPIRED, payment.getStatus());
+        verify(notificationService, times(1)).notifyOrderCancelledToBuyer(order, true);
         assertEquals(OrderStatus.CANCELLED, order.getStatus());
         assertEquals(10, variant.getStockQuantity());
         assertNotNull(order.getCancelledAt());
@@ -66,6 +69,8 @@ class PaymentExpirationServiceTests {
         when(paymentRepository.findByIdForUpdate(payment.getId())).thenReturn(Optional.of(payment));
 
         service.expirePayment(payment.getId());
+
+        verifyNoInteractions(notificationService);
 
         verifyNoInteractions(orderRepository, variantRepository);
         assertEquals(PaymentSessionStatus.PAID, payment.getStatus());

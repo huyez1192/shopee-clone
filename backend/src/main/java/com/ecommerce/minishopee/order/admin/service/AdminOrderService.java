@@ -16,6 +16,7 @@ import com.ecommerce.minishopee.order.exception.OrderNotFoundException;
 import com.ecommerce.minishopee.order.mapper.OrderMapper;
 import com.ecommerce.minishopee.order.repository.OrderRepository;
 import com.ecommerce.minishopee.order.service.OrderPaymentPolicy;
+import com.ecommerce.minishopee.notification.service.NotificationService;
 import com.ecommerce.minishopee.product.repository.ProductVariantRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,15 +33,18 @@ public class AdminOrderService {
     private final OrderRepository orderRepository;
     private final ProductVariantRepository productVariantRepository;
     private final OrderPaymentPolicy orderPaymentPolicy;
+    private final NotificationService notificationService;
 
     public AdminOrderService(
         OrderRepository orderRepository,
         ProductVariantRepository productVariantRepository,
-        OrderPaymentPolicy orderPaymentPolicy
+        OrderPaymentPolicy orderPaymentPolicy,
+        NotificationService notificationService
     ) {
         this.orderRepository = orderRepository;
         this.productVariantRepository = productVariantRepository;
         this.orderPaymentPolicy = orderPaymentPolicy;
+        this.notificationService = notificationService;
     }
 
     // Admin xem, tìm kiếm và lọc toàn bộ Order.
@@ -97,6 +101,14 @@ public class AdminOrderService {
 
         Order savedOrder = orderRepository.save(order);
 
+        if (targetStatus == OrderStatus.CONFIRMED) {
+            notificationService.notifyOrderConfirmed(savedOrder);
+        } else if (targetStatus == OrderStatus.SHIPPING) {
+            notificationService.notifyOrderShipping(savedOrder);
+        } else if (targetStatus == OrderStatus.COMPLETED) {
+            notificationService.notifyOrderCompleted(savedOrder);
+        }
+
         return OrderMapper.toResponse(savedOrder);
     }
 
@@ -128,6 +140,8 @@ public class AdminOrderService {
         order.setCancelledAt(LocalDateTime.now());
 
         Order savedOrder = orderRepository.save(order);
+
+        notificationService.notifyOrderCancelledToBuyer(savedOrder, false);
 
         return OrderMapper.toResponse(savedOrder);
     }
