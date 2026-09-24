@@ -1,269 +1,190 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
+import ErrorState from "../../../components/common/ErrorState";
+import LoadingState from "../../../components/common/LoadingState";
 import { queryKeys } from "../../../query/queryKeys";
-import { getPaymentStatus } from "../api/paymentApi";
-
+import { getApiErrorMessage } from "../../../utils/getApiErrorMessage";
+import { getPayment, getPaymentStatus } from "../api/paymentApi";
 import styles from "./SePayPaymentPage.module.css";
+
+const TERMINAL_STATUSES = new Set(["PAID", "EXPIRED", "FAILED"]);
 
 function formatPrice(price) {
   return new Intl.NumberFormat("vi-VN").format(Number(price) || 0);
 }
 
 function SePayPaymentPage() {
-  const location = useLocation();
+  const { paymentCode } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
-  const payment = useMemo(() => {
-    if (location.state?.payment) {
-      return location.state.payment;
-    }
-
-    const storedPayment = sessionStorage.getItem("sepayPayment");
-
-    if (!storedPayment) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(storedPayment);
-    } catch {
-      return null;
-    }
-  }, [location.state]);
-
   const [remainingSeconds, setRemainingSeconds] = useState(0);
 
-  const {
-    data: paymentStatusData,
-    error: paymentStatusError,
-  } = useQuery({
-    queryKey: queryKeys.payment.detail(payment?.paymentCode),
-    queryFn: () => getPaymentStatus(payment.paymentCode),
-    enabled: Boolean(payment?.paymentCode) && payment?.status !== "PAID",
-    refetchInterval: (query) => query.state.data?.status === "PAID" ? false : 3000,
-    refetchIntervalInBackground: true,
+  const paymentQuery = useQuery({
+    queryKey: queryKeys.payment.detail(paymentCode),
+    queryFn: () => getPayment(paymentCode),
+    enabled: Boolean(paymentCode),
   });
 
-  const paymentStatus = paymentStatusData?.status || payment?.status || "PENDING";
+  const detailStatus = paymentQuery.data?.status;
+  const statusQuery = useQuery({
+    queryKey: queryKeys.payment.status(paymentCode),
+    queryFn: () => getPaymentStatus(paymentCode),
+    enabled: Boolean(paymentCode) && detailStatus === "PENDING",
+    refetchInterval: (query) =>
+      query.state.data?.status && query.state.data.status !== "PENDING"
+        ? false
+        : 3000,
+    refetchIntervalInBackground: true,
+    retry: 1,
+  });
+
+  const payment = paymentQuery.data;
+  const latestStatus = statusQuery.data?.status || detailStatus;
+  const expiresAt = statusQuery.data?.expiresAt || payment?.expiresAt;
 
   useEffect(() => {
-    if (!paymentStatusError) {
-      return;
-    }
-
-    console.error(
-      "Không thể kiểm tra trạng thái thanh toán:",
-      paymentStatusError,
-    );
-  }, [paymentStatusError]);
-
-  useEffect(() => {
-    if (paymentStatusData?.status !== "PAID") {
-      return;
-    }
-
-    sessionStorage.removeItem("sepayPayment");
-
-    queryClient.invalidateQueries({
-      queryKey: queryKeys.orders.all,
-    });
-
-    navigate("/payment/success", {
-      replace: true,
-      state: {
-        payment: paymentStatusData,
-      },
-    });
-  }, [paymentStatusData, navigate, queryClient]);
-
-  useEffect(() => {
-    if (!payment?.expiresAt) {
-      return;
+    if (!expiresAt) {
+      return undefined;
     }
 
     function updateRemainingTime() {
-      const expiresAt = new Date(payment.expiresAt).getTime();
-      const now = Date.now();
-
       const difference = Math.max(
         0,
-        Math.floor((expiresAt - now) / 1000),
+        Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000),
       );
-
       setRemainingSeconds(difference);
     }
 
     updateRemainingTime();
+    const intervalId = window.setInterval(updateRemainingTime, 1000);
+    return () => window.clearInterval(intervalId);
+  }, [expiresAt]);
 
-    const intervalId = setInterval(updateRemainingTime, 1000);
+  useEffect(() => {
+    if (latestStatus !== "PAID") {
+      return;
+    }
 
-    return () => clearInterval(intervalId);
-  }, [payment]);
+    queryClient.setQueryData(
+      queryKeys.payment.detail(paymentCode),
+      (currentPayment) => ({ ...currentPayment, ...statusQuery.data }),
+    );
+    queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.payment.detail(paymentCode),
+      refetchType: "none",
+    });
+    navigate(`/payment/success/${encodeURIComponent(paymentCode)}`, { replace: true });
+  }, [latestStatus, navigate, paymentCode, queryClient, statusQuery.data]);
 
-  if (!payment) {
+  if (paymentQuery.isLoading) {
+    return <LoadingState message="Đang tải thông tin thanh toán..." />;
+  }
+
+  if (paymentQuery.error || !payment) {
     return (
-      <main className={styles.page}>
-        <div className={styles.card}>
-          <h1>
-            Không tìm thấy thông tin thanh toán
-          </h1>
-
-          <p>
-            Phiên thanh toán không tồn tại hoặc
-            đã bị mất.
-          </p>
-
-          <Link to="/orders">
-            Xem đơn hàng
-          </Link>
-        </div>
-      </main>
+      <ErrorState
+        message={getApiErrorMessage(paymentQuery.error, "Không thể tải thông tin thanh toán.")}
+        onRetry={paymentQuery.refetch}
+      />
     );
   }
 
   const minutes = Math.floor(remainingSeconds / 60);
-
   const seconds = remainingSeconds % 60;
-
-  const isExpired = remainingSeconds <= 0;
+  const awaitingBackendExpiration = latestStatus === "PENDING" && remainingSeconds === 0;
+  const isTerminal = TERMINAL_STATUSES.has(latestStatus);
 
   return (
     <main className={styles.page}>
       <div className={styles.card}>
         <div className={styles.header}>
-          <h1>
-            Thanh toán qua SePay
-          </h1>
-
-          <p>
-            Quét mã QR bằng ứng dụng ngân hàng
-            để hoàn tất thanh toán.
-          </p>
+          <h1>Thanh toán qua SePay</h1>
+          <p>Quét mã QR bằng ứng dụng ngân hàng để hoàn tất thanh toán.</p>
         </div>
 
-        <div className={styles.content}>
-          <div className={styles.qrSection}>
-            <img
-              src={payment.qrUrl}
-              alt="QR thanh toán SePay"
-              className={styles.qrImage}
-            />
-
-            {!isExpired ? (
+        {latestStatus === "EXPIRED" || latestStatus === "FAILED" ? (
+          <div className={styles.notice} role="status">
+            <strong>
+              {latestStatus === "EXPIRED"
+                ? "Phiên thanh toán đã hết hạn."
+                : "Thanh toán không thành công."}
+            </strong>
+            <span>
+              {latestStatus === "EXPIRED"
+                ? "Đơn hàng chưa thanh toán đã được hủy."
+                : "Bạn có thể xem lại trạng thái đơn hàng hoặc quay lại mua hàng."}
+            </span>
+          </div>
+        ) : (
+          <div className={styles.content}>
+            <div className={styles.qrSection}>
+              <img src={payment.qrUrl} alt="QR thanh toán SePay" className={styles.qrImage} />
               <div className={styles.waiting}>
-                Đang chờ thanh toán...
+                {awaitingBackendExpiration
+                  ? "Đang xác nhận trạng thái thanh toán..."
+                  : "Đang chờ thanh toán..."}
               </div>
-            ) : (
-              <div className={styles.expired}>
-                Phiên thanh toán đã hết hạn.
-              </div>
-            )}
-          </div>
-
-          <div className={styles.paymentInfo}>
-            <div className={styles.infoRow}>
-              <span>Ngân hàng</span>
-
-              <strong>
-                {payment.bankCode}
-              </strong>
             </div>
 
-            <div className={styles.infoRow}>
-              <span>Chủ tài khoản</span>
-
-              <strong>
-                {payment.accountName}
-              </strong>
-            </div>
-
-            <div className={styles.infoRow}>
-              <span>Số tài khoản</span>
-
-              <strong>
-                {payment.accountNumber}
-              </strong>
-            </div>
-
-            <div className={styles.infoRow}>
-              <span>Số tiền</span>
-
-              <strong
-                className={styles.amount}
-              >
-                ₫{formatPrice(payment.amount)}
-              </strong>
-            </div>
-
-            <div className={styles.infoRow}>
-              <span>Nội dung chuyển khoản</span>
-
-              <strong
-                className={styles.paymentCode}
-              >
-                {payment.paymentCode}
-              </strong>
-            </div>
-
-            <div className={styles.infoRow}>
-              <span>Trạng thái</span>
-
-              <strong className={styles.pending}>
-                {paymentStatus}
-              </strong>
-            </div>
-
-            <div className={styles.infoRow}>
-              <span>Thời gian còn lại</span>
-
-              <strong
-                className={
-                  isExpired
-                    ? styles.expiredText
-                    : styles.countdown
-                }
-              >
-                {isExpired
-                  ? "Đã hết hạn"
-                  : `${String(
-                      minutes,
-                    ).padStart(
-                      2,
-                      "0",
-                    )}:${String(
-                      seconds,
-                    ).padStart(
-                      2,
-                      "0",
-                    )}`}
-              </strong>
+            <div className={styles.paymentInfo}>
+              <InfoRow label="Ngân hàng" value={payment.bankCode} />
+              <InfoRow label="Chủ tài khoản" value={payment.accountName} />
+              <InfoRow label="Số tài khoản" value={payment.accountNumber} />
+              <InfoRow label="Số tiền" value={`₫${formatPrice(payment.amount)}`} valueClass={styles.amount} />
+              <InfoRow label="Nội dung chuyển khoản" value={payment.paymentCode} valueClass={styles.paymentCode} />
+              <InfoRow label="Trạng thái" value={latestStatus} valueClass={styles.pending} />
+              <InfoRow
+                label="Thời gian còn lại"
+                value={awaitingBackendExpiration
+                  ? "Đang xác nhận..."
+                  : `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`}
+                valueClass={awaitingBackendExpiration ? styles.expiredText : styles.countdown}
+              />
             </div>
           </div>
-        </div>
+        )}
 
-        <div className={styles.notice}>
-          <strong>Lưu ý:</strong>
+        {statusQuery.error && latestStatus === "PENDING" && (
+          <div className={styles.notice} role="alert">
+            <span>Không thể cập nhật trạng thái thanh toán.</span>
+            <button type="button" onClick={() => statusQuery.refetch()}>Thử lại</button>
+          </div>
+        )}
 
-          <span>
-            Vui lòng chuyển đúng số tiền và giữ
-            nguyên nội dung chuyển khoản để hệ
-            thống có thể xác định giao dịch.
-          </span>
-        </div>
+        {!isTerminal && (
+          <div className={styles.notice}>
+            <strong>Lưu ý:</strong>
+            <span>Vui lòng chuyển đúng số tiền và giữ nguyên nội dung chuyển khoản.</span>
+          </div>
+        )}
+
+        {Array.isArray(payment.orders) && payment.orders.length > 0 && (
+          <div className={styles.notice}>
+            <strong>Đơn hàng:</strong>
+            {payment.orders.map((order) => (
+              <Link key={order.id} to={`/orders/${order.id}`}>{order.orderCode}</Link>
+            ))}
+          </div>
+        )}
 
         <div className={styles.actions}>
-          <Link
-            to="/orders"
-            className={styles.orderLink}
-          >
-            Xem đơn hàng
-          </Link>
+          <Link to="/orders" className={styles.orderLink}>Xem đơn hàng</Link>
+          {isTerminal && <Link to="/">Quay lại mua hàng</Link>}
         </div>
       </div>
     </main>
+  );
+}
+
+function InfoRow({ label, value, valueClass }) {
+  return (
+    <div className={styles.infoRow}>
+      <span>{label}</span>
+      <strong className={valueClass}>{value}</strong>
+    </div>
   );
 }
 

@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import com.ecommerce.minishopee.common.exception.BadRequestException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -132,6 +133,51 @@ class SePayWebhookServiceTests {
         assertEquals(PaymentSessionStatus.PAID, payment.getStatus());
         verify(orderRepository, never()).saveAll(any());
         verify(paymentRepository, never()).save(any());
+    }
+
+    @Test
+    void partialAndOverpaymentDoNotMarkPaymentPaid() {
+        for (BigDecimal amount : List.of(BigDecimal.valueOf(499_999), BigDecimal.valueOf(500_001))) {
+            reset(paymentRepository, transactionRepository, orderRepository);
+            Payment payment = payment(PaymentSessionStatus.PENDING);
+            SePayWebhookRequest request = request();
+            request.setTransferAmount(amount);
+            when(paymentRepository.findByPaymentCodeForUpdate(request.getCode())).thenReturn(Optional.of(payment));
+            when(transactionRepository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+            SePayWebhookProcessor subject = new SePayWebhookProcessor(paymentRepository, transactionRepository, orderRepository);
+            assertThrows(BadRequestException.class, () -> subject.processFirstDelivery(request, "{}"));
+            assertEquals(PaymentSessionStatus.PENDING, payment.getStatus());
+            verify(orderRepository, never()).saveAll(any());
+        }
+    }
+
+    @Test
+    void accountMismatchDoesNotMarkPaymentPaid() {
+        Payment payment = payment(PaymentSessionStatus.PENDING);
+        SePayWebhookRequest request = request();
+        request.setAccountNumber("WRONG");
+        when(paymentRepository.findByPaymentCodeForUpdate(request.getCode())).thenReturn(Optional.of(payment));
+        when(transactionRepository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        SePayWebhookProcessor subject = new SePayWebhookProcessor(paymentRepository, transactionRepository, orderRepository);
+        assertThrows(BadRequestException.class, () -> subject.processFirstDelivery(request, "{}"));
+        assertEquals(PaymentSessionStatus.PENDING, payment.getStatus());
+        verify(orderRepository, never()).saveAll(any());
+    }
+
+    @Test
+    void outgoingTransferIsAuditedWithoutMatchingPayment() {
+        SePayWebhookRequest request = request();
+        request.setTransferType("out");
+        when(transactionRepository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        new SePayWebhookProcessor(paymentRepository, transactionRepository, orderRepository)
+                .processFirstDelivery(request, "{}");
+
+        verify(paymentRepository, never()).findByPaymentCodeForUpdate(any());
+        verify(transactionRepository).saveAndFlush(any());
+        verify(orderRepository, never()).saveAll(any());
     }
 
     private Payment payment(PaymentSessionStatus status) {

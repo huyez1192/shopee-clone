@@ -47,6 +47,7 @@ export const queryKeys = {
 
   payment: {
     detail: (paymentCode) => ["payment", paymentCode],
+    status: (paymentCode) => ["payment", paymentCode, "status"],
   },
 
   seller: {

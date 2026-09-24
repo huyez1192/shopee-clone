@@ -149,12 +149,7 @@ function CheckoutPage() {
           );
         }
 
-        sessionStorage.setItem(
-          "sepayPayment",
-          JSON.stringify(response.payment),
-        );
-
-        navigate("/payment/sepay", {
+        navigate(`/payment/sepay/${encodeURIComponent(response.payment.paymentCode)}`, {
           replace: true,
           state: {
             payment: response.payment,

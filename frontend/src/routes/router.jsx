@@ -128,12 +128,12 @@ const router = createBrowserRouter([
           },
 
           {
-            path: "/payment/sepay",
+            path: "/payment/sepay/:paymentCode",
             element: <SePayPaymentPage />,
           },
 
           {
-            path: "/payment/success",
+            path: "/payment/success/:paymentCode",
             element: <PaymentSuccessPage />,
           },
         ],

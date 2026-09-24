@@ -1,6 +1,7 @@
 package com.ecommerce.minishopee.payment.controller;
 
 import com.ecommerce.minishopee.payment.dto.response.PaymentStatusResponse;
+import com.ecommerce.minishopee.payment.dto.response.PaymentResponse;
 import com.ecommerce.minishopee.payment.service.PaymentService;
 import com.ecommerce.minishopee.user.entity.AppUser;
 
@@ -17,6 +18,14 @@ public class PaymentController {
             PaymentService paymentService
     ) {
         this.paymentService = paymentService;
+    }
+
+    @GetMapping("/{paymentCode}")
+    public PaymentResponse getPayment(
+            @PathVariable String paymentCode,
+            @AuthenticationPrincipal AppUser currentUser
+    ) {
+        return paymentService.getPayment(currentUser, paymentCode);
     }
 
     /*

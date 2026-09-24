@@ -2,6 +2,7 @@ package com.ecommerce.minishopee.payment.service;
 
 import com.ecommerce.minishopee.payment.config.SePayProperties;
 import com.ecommerce.minishopee.payment.dto.response.PaymentResponse;
+import com.ecommerce.minishopee.payment.dto.response.PaymentOrderResponse;
 import com.ecommerce.minishopee.payment.entity.Payment;
 import com.ecommerce.minishopee.payment.enums.PaymentProvider;
 import com.ecommerce.minishopee.payment.enums.PaymentSessionStatus;
@@ -11,6 +12,7 @@ import com.ecommerce.minishopee.payment.dto.response.PaymentStatusResponse;
 import com.ecommerce.minishopee.user.entity.AppUser;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -94,6 +96,7 @@ public class PaymentService {
 
         return PaymentResponse.builder()
                 .paymentCode(payment.getPaymentCode())
+                .provider(payment.getProvider())
                 .status(payment.getStatus())
                 .amount(payment.getAmount())
                 .bankCode(payment.getBankCode())
@@ -101,7 +104,23 @@ public class PaymentService {
                 .accountName(sePayProperties.getAccountName())
                 .qrUrl(sePayQrService.generateQrUrl(payment))
                 .expiresAt(payment.getExpiresAt())
+                .paidAt(payment.getPaidAt())
+                .orders(payment.getOrders().stream()
+                        .map(order -> PaymentOrderResponse.builder()
+                                .id(order.getId())
+                                .orderCode(order.getOrderCode())
+                                .build())
+                        .toList())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public PaymentResponse getPayment(AppUser currentUser, String paymentCode) {
+        Payment payment = paymentRepository
+                .findByPaymentCodeAndUserId(paymentCode, currentUser.getId())
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy Payment."));
+
+        return toResponse(payment);
     }
 
     public PaymentStatusResponse getPaymentStatus(

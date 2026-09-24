@@ -12,12 +12,16 @@ import com.ecommerce.minishopee.payment.repository.PaymentRepository;
 import com.ecommerce.minishopee.payment.repository.SePayTransactionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class SePayWebhookProcessor {
+
+    private static final Logger log = LoggerFactory.getLogger(SePayWebhookProcessor.class);
 
     private final PaymentRepository paymentRepository;
     private final SePayTransactionRepository transactionRepository;
@@ -49,7 +53,19 @@ public class SePayWebhookProcessor {
         // Flush tại đây để unique collision xảy ra bên trong transaction này.
         transactionRepository.saveAndFlush(transaction);
 
-        if (payment == null || payment.getStatus() != PaymentSessionStatus.PENDING) {
+        if (payment == null) {
+            return;
+        }
+
+        if (payment.getStatus() == PaymentSessionStatus.EXPIRED) {
+            log.warn(
+                    "Late SePay payment requires manual reconciliation: transactionId={}, paymentCode={}, amount={}, paymentStatus={}",
+                    request.getId(), payment.getPaymentCode(), request.getTransferAmount(), payment.getStatus()
+            );
+            return;
+        }
+
+        if (payment.getStatus() != PaymentSessionStatus.PENDING) {
             return;
         }
 

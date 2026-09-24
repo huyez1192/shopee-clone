@@ -146,11 +146,27 @@
   border: 1px solid #ffddd5;
 
   font-size: 13px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .notice strong {
   color: #ee4d2d;
   white-space: nowrap;
+}
+
+.notice a {
+  color: #ee4d2d;
+  text-decoration: none;
+}
+
+.notice button {
+  padding: 5px 10px;
+  cursor: pointer;
+  color: #ee4d2d;
+  background: #fff;
+  border: 1px solid #ee4d2d;
+  border-radius: 2px;
 }
 
 .actions {
@@ -159,6 +175,19 @@
   padding: 25px 35px;
 
   justify-content: flex-end;
+  gap: 12px;
+}
+
+.actions > a:not(.orderLink) {
+  display: inline-flex;
+  min-width: 150px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  color: #ee4d2d;
+  text-decoration: none;
+  border: 1px solid #ee4d2d;
+  border-radius: 2px;
 }
 
 .orderLink {
