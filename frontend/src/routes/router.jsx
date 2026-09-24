@@ -35,6 +35,7 @@ import SellerProductCreatePage from "../features/seller/product/pages/SellerProd
 import SellerProductListPage from "../features/seller/product/pages/SellerProductListPage";
 import SellerInventoryPage from "../features/seller/inventory/pages/SellerInventoryPage";
 import SellerReviewPage from "../features/seller/review/pages/SellerReviewPage";
+import SellerStatisticsPage from "../features/seller/statistics/pages/SellerStatisticsPage";
 import NotificationPage from "../features/notification/pages/NotificationPage";
 
 
@@ -154,6 +155,10 @@ const router = createBrowserRouter([
           element: <SellerLayout />,
 
           children: [
+            {
+              index: true,
+              element: <SellerStatisticsPage />,
+            },
             {
               path: "orders",
               element: <SellerOrderListPage />,

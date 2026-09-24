@@ -1,4 +1,4 @@
-import { Link, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet } from "react-router-dom";
 
 import styles from "./SellerLayout.module.css";
 
@@ -75,7 +75,13 @@ function SellerLayout() {
           <div className={styles.menuGroup}>
             <strong>▱ Tài chính</strong>
 
-            <span>Doanh thu</span>
+            <NavLink
+              to="/seller"
+              end
+              className={({ isActive }) => isActive ? styles.activeMenu : undefined}
+            >
+              Doanh thu
+            </NavLink>
           </div>
 
           <div className={styles.menuGroup}>

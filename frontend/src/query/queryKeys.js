@@ -50,6 +50,12 @@ export const queryKeys = {
   },
 
   seller: {
+    statistics: {
+      all: ["seller", "statistics"],
+      overview: (params = {}) => ["seller", "statistics", "overview", params],
+      revenueSeries: (params = {}) => ["seller", "statistics", "revenue-series", params],
+      topProducts: (params = {}) => ["seller", "statistics", "top-products", params],
+    },
     reviews: {
       all: ["seller", "reviews"],
       list: (params = {}) => ["seller", "reviews", params],
