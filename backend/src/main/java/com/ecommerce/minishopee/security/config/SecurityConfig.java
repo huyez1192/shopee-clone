@@ -152,6 +152,9 @@ public class SecurityConfig {
                             .requestMatchers("/api/notifications/**")
                             .authenticated()
 
+                            .requestMatchers("/api/uploads/**")
+                            .authenticated()
+
 
 
 

@@ -114,6 +114,12 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http5</artifactId>
+            <version>2.4.0</version>
+        </dependency>
+
 
     </dependencies>
 

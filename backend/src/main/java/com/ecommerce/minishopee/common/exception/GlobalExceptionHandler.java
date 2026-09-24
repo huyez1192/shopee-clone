@@ -13,14 +13,21 @@ import com.ecommerce.minishopee.review.exception.ReviewConflictException;
 import com.ecommerce.minishopee.review.exception.ReviewNotFoundException;
 import com.ecommerce.minishopee.shop.exception.ShopNotFoundException;
 import com.ecommerce.minishopee.user.exception.UserNotFoundException;
+import com.ecommerce.minishopee.upload.exception.ImageUploadException;
+import com.ecommerce.minishopee.upload.exception.InvalidImageException;
+import com.ecommerce.minishopee.upload.exception.ImageUploadUnavailableException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -28,6 +35,40 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler({InvalidImageException.class, MaxUploadSizeExceededException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, Object> handleInvalidImage(RuntimeException exception, HttpServletRequest request) {
+        String message = exception instanceof MaxUploadSizeExceededException
+                ? "Tệp ảnh không được vượt quá 5 MB."
+                : exception.getMessage();
+        return error(HttpStatus.BAD_REQUEST, message, request);
+    }
+
+    @ExceptionHandler(ImageUploadException.class)
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
+    public Map<String, Object> handleImageUpload(ImageUploadException exception, HttpServletRequest request) {
+        return error(HttpStatus.BAD_GATEWAY, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(ImageUploadUnavailableException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public Map<String, Object> handleImageUploadUnavailable(
+            ImageUploadUnavailableException exception,
+            HttpServletRequest request
+    ) {
+        return error(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler({
+            MethodArgumentTypeMismatchException.class,
+            MissingServletRequestParameterException.class,
+            MissingServletRequestPartException.class
+    })
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, Object> handleInvalidRequest(Exception exception, HttpServletRequest request) {
+        return error(HttpStatus.BAD_REQUEST, "Tham số yêu cầu không hợp lệ hoặc bị thiếu.", request);
+    }
 
     @ExceptionHandler({ReviewNotFoundException.class, OrderItemNotFoundException.class,
             NotificationNotFoundException.class})
