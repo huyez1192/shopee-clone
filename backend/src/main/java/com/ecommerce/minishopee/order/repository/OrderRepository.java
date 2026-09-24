@@ -10,8 +10,86 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
+import com.ecommerce.minishopee.statistics.projection.OrderFinancialSummaryProjection;
+import com.ecommerce.minishopee.statistics.projection.OrderPeriodProjection;
+import com.ecommerce.minishopee.statistics.projection.OrderStatusCountProjection;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
+
+    @Query("""
+            SELECT COALESCE(SUM(o.merchandiseSubtotal), 0) AS completedRevenue,
+                   COALESCE(SUM(o.totalAmount), 0) AS completedGmv,
+                   COUNT(o.id) AS completedOrderCount
+            FROM Order o
+            WHERE (:shopId IS NULL OR o.shop.id = :shopId)
+              AND o.status = com.ecommerce.minishopee.order.enums.OrderStatus.COMPLETED
+              AND o.paymentStatus = com.ecommerce.minishopee.order.enums.PaymentStatus.PAID
+              AND o.completedAt >= :from AND o.completedAt < :toExclusive
+            """)
+    OrderFinancialSummaryProjection summarizeCompletedOrders(
+            @Param("shopId") Long shopId,
+            @Param("from") LocalDateTime from,
+            @Param("toExclusive") LocalDateTime toExclusive
+    );
+
+    @Query("""
+            SELECT COUNT(o.id) FROM Order o
+            WHERE (:shopId IS NULL OR o.shop.id = :shopId)
+              AND o.createdAt >= :from AND o.createdAt < :toExclusive
+            """)
+    long countCreatedOrders(@Param("shopId") Long shopId,
+                            @Param("from") LocalDateTime from,
+                            @Param("toExclusive") LocalDateTime toExclusive);
+
+    @Query("""
+            SELECT o.status AS status, COUNT(o.id) AS orderCount
+            FROM Order o
+            WHERE (:shopId IS NULL OR o.shop.id = :shopId)
+              AND o.createdAt >= :from AND o.createdAt < :toExclusive
+            GROUP BY o.status
+            """)
+    List<OrderStatusCountProjection> countByCurrentStatus(
+            @Param("shopId") Long shopId,
+            @Param("from") LocalDateTime from,
+            @Param("toExclusive") LocalDateTime toExclusive
+    );
+
+    @Query("""
+            SELECT year(o.completedAt) AS periodYear, month(o.completedAt) AS periodMonth,
+                   day(o.completedAt) AS periodDay,
+                   SUM(o.merchandiseSubtotal) AS completedRevenue,
+                   SUM(o.totalAmount) AS completedGmv,
+                   COUNT(o.id) AS completedOrderCount
+            FROM Order o
+            WHERE o.shop.id = :shopId
+              AND o.status = com.ecommerce.minishopee.order.enums.OrderStatus.COMPLETED
+              AND o.paymentStatus = com.ecommerce.minishopee.order.enums.PaymentStatus.PAID
+              AND o.completedAt >= :from AND o.completedAt < :toExclusive
+            GROUP BY year(o.completedAt), month(o.completedAt), day(o.completedAt)
+            ORDER BY year(o.completedAt), month(o.completedAt), day(o.completedAt)
+            """)
+    List<OrderPeriodProjection> summarizeCompletedOrdersByDay(
+            @Param("shopId") Long shopId, @Param("from") LocalDateTime from,
+            @Param("toExclusive") LocalDateTime toExclusive);
+
+    @Query("""
+            SELECT year(o.completedAt) AS periodYear, month(o.completedAt) AS periodMonth,
+                   0 AS periodDay,
+                   SUM(o.merchandiseSubtotal) AS completedRevenue,
+                   SUM(o.totalAmount) AS completedGmv,
+                   COUNT(o.id) AS completedOrderCount
+            FROM Order o
+            WHERE o.shop.id = :shopId
+              AND o.status = com.ecommerce.minishopee.order.enums.OrderStatus.COMPLETED
+              AND o.paymentStatus = com.ecommerce.minishopee.order.enums.PaymentStatus.PAID
+              AND o.completedAt >= :from AND o.completedAt < :toExclusive
+            GROUP BY year(o.completedAt), month(o.completedAt)
+            ORDER BY year(o.completedAt), month(o.completedAt)
+            """)
+    List<OrderPeriodProjection> summarizeCompletedOrdersByMonth(
+            @Param("shopId") Long shopId, @Param("from") LocalDateTime from,
+            @Param("toExclusive") LocalDateTime toExclusive);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""

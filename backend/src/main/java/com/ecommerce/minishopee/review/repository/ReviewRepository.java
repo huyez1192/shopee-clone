@@ -54,6 +54,18 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     ProductRatingSummaryProjection summarizeProductRatings(@Param("productId") Long productId);
 
     @Query("""
+            SELECT COALESCE(AVG(r.rating), 0.0) AS averageRating,
+                   COUNT(r.id) AS reviewCount,
+                   COALESCE(SUM(CASE WHEN r.rating = 5 THEN 1 ELSE 0 END), 0) AS fiveStarCount,
+                   COALESCE(SUM(CASE WHEN r.rating = 4 THEN 1 ELSE 0 END), 0) AS fourStarCount,
+                   COALESCE(SUM(CASE WHEN r.rating = 3 THEN 1 ELSE 0 END), 0) AS threeStarCount,
+                   COALESCE(SUM(CASE WHEN r.rating = 2 THEN 1 ELSE 0 END), 0) AS twoStarCount,
+                   COALESCE(SUM(CASE WHEN r.rating = 1 THEN 1 ELSE 0 END), 0) AS oneStarCount
+            FROM Review r WHERE r.product.shop.id = :shopId
+            """)
+    ProductRatingSummaryProjection summarizeShopRatings(@Param("shopId") Long shopId);
+
+    @Query("""
             SELECT r FROM Review r
             JOIN FETCH r.buyer
             JOIN FETCH r.product p
