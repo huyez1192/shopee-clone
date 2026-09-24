@@ -1,10 +1,12 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
 import { getCategories } from "../../../category/api/categoryApi";
 import { queryKeys } from "../../../../query/queryKeys";
 import { createSellerProduct, createSellerProductVariant, showSellerProduct } from "../api/sellerProductApi";
+import ImageSourceInput from "../../../upload/components/ImageSourceInput";
+import { isValidImageUrl } from "../../../upload/utils/imageValidation";
 
 import styles from "./SellerProductCreatePage.module.css";
 
@@ -69,6 +71,7 @@ function SellerProductCreatePage() {
   const [variantGroups, setVariantGroups] = useState([]);
   const [variantRows, setVariantRows] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isImageUploading, setIsImageUploading] = useState(false);
 
   const { data: categories = [] } = useQuery({
     queryKey: queryKeys.categories.all,
@@ -99,11 +102,6 @@ function SellerProductCreatePage() {
 
   const isSubmitting = createProductMutation.isPending;
   const hasVariants = variantGroups.length > 0;
-
-  const imagePreview = useMemo(() => {
-    const value = form.imageUrl.trim();
-    return value || null;
-  }, [form.imageUrl]);
 
   function handleFormChange(event) {
     const { name, value } = event.target;
@@ -184,6 +182,8 @@ function SellerProductCreatePage() {
   function validateForm() {
     if (!form.name.trim()) return "Vui lòng nhập tên sản phẩm.";
     if (!form.categoryId) return "Vui lòng chọn ngành hàng.";
+    if (form.imageUrl.trim() && !isValidImageUrl(form.imageUrl)) return "URL ảnh không hợp lệ.";
+    if (isImageUploading) return "Vui lòng chờ ảnh tải lên hoàn tất.";
 
     if (!hasVariants) {
       if (!form.price || Number(form.price) <= 0) return "Giá sản phẩm phải lớn hơn 0.";
@@ -295,36 +295,14 @@ function SellerProductCreatePage() {
               Ảnh sản phẩm
             </label>
 
-            <div className={styles.imageArea}>
-              <div className={styles.imagePreview}>
-                {imagePreview ? (
-                  <img
-                    src={imagePreview}
-                    alt="Ảnh sản phẩm"
-                    onError={(event) => {
-                      event.currentTarget.style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <>
-                    <div className={styles.imageIcon}>＋</div>
-                    <span>Thêm hình ảnh</span>
-                  </>
-                )}
-              </div>
-
-              <div className={styles.imageInput}>
-                <input
-                  type="url"
-                  name="imageUrl"
-                  value={form.imageUrl}
-                  placeholder="Nhập URL ảnh sản phẩm"
-                  onChange={handleFormChange}
-                />
-
-                <small>Phiên bản hiện tại sử dụng URL ảnh.</small>
-              </div>
-            </div>
+            <ImageSourceInput
+              value={form.imageUrl}
+              onChange={(imageUrl) => setForm((current) => ({ ...current, imageUrl }))}
+              purpose="PRODUCT"
+              label="Ảnh sản phẩm"
+              disabled={isSubmitting}
+              onUploadingChange={setIsImageUploading}
+            />
           </div>
 
           {/* NAME */}
@@ -569,8 +547,8 @@ function SellerProductCreatePage() {
             Hủy
           </button>
 
-          <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
-            {isSubmitting ? "Đang lưu..." : "Lưu & Hiển thị"}
+          <button type="submit" className={styles.submitButton} disabled={isSubmitting || isImageUploading}>
+            {isSubmitting ? "Đang lưu..." : isImageUploading ? "Đang tải ảnh..." : "Lưu & Hiển thị"}
           </button>
         </div>
       </form>
