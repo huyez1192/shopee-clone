@@ -1,8 +1,12 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import useAuth from "../../features/auth/hooks/useAuth";
+import NotificationDropdown from "../../features/notification/components/NotificationDropdown";
+import { getUnreadNotificationCount } from "../../features/notification/api/notificationApi";
+import { queryKeys } from "../../query/queryKeys";
 
 import styles from "./Header.module.css";
 
@@ -53,11 +57,21 @@ function Header() {
   } = useAuth();
 
   const navigate = useNavigate();
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const closeNotifications = useCallback(() => setIsNotificationOpen(false), []);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const initialKeyword = location.pathname === "/products"
     ? searchParams.get("keyword") || ""
     : "";
+
+  const unreadCountQuery = useQuery({
+    queryKey: queryKeys.notifications.unreadCount(),
+    queryFn: getUnreadNotificationCount,
+    enabled: isAuthenticated,
+  });
+
+  const unreadCount = Math.max(0, Number(unreadCountQuery.data?.count) || 0);
 
 
 
@@ -99,9 +113,33 @@ function Header() {
           </nav>
 
           <nav className={styles.accountNavigation}>
-            <button type="button">
-              Thông Báo
-            </button>
+            <div className={styles.notificationArea}>
+              <button
+                type="button"
+                className={styles.notificationTrigger}
+                aria-expanded={isAuthenticated ? isNotificationOpen : undefined}
+                aria-haspopup={isAuthenticated ? "dialog" : undefined}
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    navigate("/login", { state: { redirectPath: location.pathname } });
+                    return;
+                  }
+                  setIsNotificationOpen((open) => !open);
+                }}
+              >
+                <span className={styles.bellIcon} aria-hidden="true" />
+                Thông Báo
+                {unreadCount > 0 && (
+                  <span className={styles.notificationBadge} aria-label={`${unreadCount} thông báo chưa đọc`}>
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {isAuthenticated && isNotificationOpen && (
+                <NotificationDropdown onClose={closeNotifications} />
+              )}
+            </div>
 
             <button type="button">
               Hỗ Trợ

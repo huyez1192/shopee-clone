@@ -1,0 +1,22 @@
+.page { width: min(1120px, calc(100% - 32px)); margin: 28px auto 60px; }
+.panel { min-height: 460px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
+.header { display: flex; min-height: 80px; padding: 16px 20px 0; align-items: flex-start; justify-content: space-between; gap: 20px; border-bottom: 1px solid #eee; }
+.header h1 { margin: 0 0 13px; font-size: 20px; font-weight: 500; }
+.filters { display: flex; gap: 28px; }
+.filters button { padding: 0 0 10px; color: #666; background: transparent; border: 0; border-bottom: 2px solid transparent; cursor: pointer; }
+.filters .active { color: #ee4d2d; border-bottom-color: #ee4d2d; }
+.readAll { padding: 5px 0; color: #555; background: transparent; border: 0; cursor: pointer; }
+.readAll:hover { color: #ee4d2d; }
+.readAll:disabled { color: #aaa; cursor: wait; }
+.list { background: #fff4f1; }
+.state { display: grid; min-height: 320px; padding: 40px; place-items: center; text-align: center; }
+.mutationError { margin: 0; padding: 10px 20px; color: #c0392b; background: #fff2f0; }
+.panel > nav { margin: 30px 0; }
+
+@media (max-width: 600px) {
+  .page { width: 100%; margin: 12px 0 30px; }
+  .header { min-height: auto; padding: 14px 12px 0; flex-direction: column; gap: 8px; }
+  .filters { gap: 20px; }
+  .readAll { align-self: flex-end; margin-bottom: 10px; }
+  .state { padding: 24px 12px; }
+}

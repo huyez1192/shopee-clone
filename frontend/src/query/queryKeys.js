@@ -32,6 +32,12 @@ export const queryKeys = {
     detail: (orderId) => ["orders", orderId],
   },
 
+  notifications: {
+    all: ["notifications"],
+    list: (params = {}) => ["notifications", "list", params],
+    unreadCount: () => ["notifications", "unread-count"],
+  },
+
   reviews: {
     all: ["reviews"],
     product: (productId, params = {}) => ["reviews", "product", productId, params],

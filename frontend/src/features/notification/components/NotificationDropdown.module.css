@@ -1,0 +1,24 @@
+.dropdown {
+  position: absolute;
+  z-index: 1100;
+  top: calc(100% + 10px);
+  right: -12px;
+  width: min(500px, calc(100vw - 24px));
+  color: #555;
+  background: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+}
+.dropdown::before { position: absolute; top: -8px; right: 36px; width: 14px; height: 14px; content: ""; background: #fff; transform: rotate(45deg); }
+.dropdown > header { position: relative; padding: 14px; color: #aaa; font-size: 14px; }
+.body { max-height: 420px; overflow-y: auto; }
+.state { min-height: 100px; margin: 0; padding: 30px 16px; text-align: center; }
+.state button { padding: 6px 12px; color: #ee4d2d; background: #fff; border: 1px solid #ee4d2d; cursor: pointer; }
+.viewAll { width: 100%; padding: 14px; background: #fff; border: 0; cursor: pointer; }
+.viewAll:hover { background: #f8f8f8; }
+
+@media (max-width: 600px) {
+  .dropdown { position: fixed; top: 38px; right: 8px; left: 8px; width: auto; }
+  .dropdown::before { right: 72px; }
+  .body { max-height: min(420px, calc(100vh - 130px)); }
+}

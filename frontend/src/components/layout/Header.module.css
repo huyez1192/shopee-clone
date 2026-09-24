@@ -149,6 +149,50 @@
   gap: 10px;
 }
 
+.notificationArea { position: relative; }
+
+.notificationTrigger {
+  display: inline-flex;
+  position: relative;
+  align-items: center;
+  gap: 5px;
+}
+
+.bellIcon {
+  position: relative;
+  width: 13px;
+  height: 14px;
+  border: 1.5px solid currentColor;
+  border-radius: 7px 7px 3px 3px;
+}
+
+.bellIcon::after {
+  position: absolute;
+  bottom: -4px;
+  left: 4px;
+  width: 3px;
+  height: 3px;
+  content: "";
+  background: currentColor;
+  border-radius: 50%;
+}
+
+.notificationBadge {
+  position: absolute;
+  top: -9px;
+  right: -13px;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 4px;
+  color: #ee4d2d;
+  line-height: 14px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid #ee4d2d;
+  border-radius: 9px;
+  font-size: 10px;
+}
+
 @media (max-width: 900px) {
   .topNavigation {
     display: none;

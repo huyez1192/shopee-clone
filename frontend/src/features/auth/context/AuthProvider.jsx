@@ -62,6 +62,7 @@ function AuthProvider({ children }) {
     queryClient.removeQueries({ queryKey: queryKeys.addresses.all });
     queryClient.removeQueries({ queryKey: ["checkout"] });
     queryClient.removeQueries({ queryKey: queryKeys.orders.all });
+    queryClient.removeQueries({ queryKey: queryKeys.notifications.all });
     queryClient.removeQueries({ queryKey: ["payment"] });
     queryClient.removeQueries({ queryKey: ["seller"] });
   }, [queryClient]);
