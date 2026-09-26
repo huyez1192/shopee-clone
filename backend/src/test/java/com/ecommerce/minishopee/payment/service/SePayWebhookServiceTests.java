@@ -63,6 +63,50 @@ class SePayWebhookServiceTests {
     }
 
     @Test
+    void paymentCodeInTransferContentMarksPaymentPaidWhenSePayCodeIsMissing() {
+        Payment payment = payment(PaymentSessionStatus.PENDING);
+        List<Order> orders = List.of(unpaidOrder());
+        SePayWebhookRequest request = request();
+        request.setCode(null);
+        request.setContent("Thanh toan ms123 cho don hang");
+        when(paymentRepository.findByPaymentCodeForUpdate("MS123"))
+                .thenReturn(Optional.of(payment));
+        when(orderRepository.findAllByPaymentIdForUpdateOrdered(payment.getId()))
+                .thenReturn(orders);
+        when(transactionRepository.saveAndFlush(any()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        new SePayWebhookProcessor(paymentRepository, transactionRepository, orderRepository)
+                .processFirstDelivery(request, "{}");
+
+        assertEquals(PaymentSessionStatus.PAID, payment.getStatus());
+        assertEquals(PaymentStatus.PAID, orders.getFirst().getPaymentStatus());
+    }
+
+    @Test
+    void transferContentIsUsedWhenSePayCodeDoesNotIdentifyAPayment() {
+        Payment payment = payment(PaymentSessionStatus.PENDING);
+        SePayWebhookRequest request = request();
+        request.setCode("BANK_REFERENCE");
+        request.setDescription("IBFT MS123 THANH TOAN");
+        when(paymentRepository.findByPaymentCodeForUpdate("BANK_REFERENCE"))
+                .thenReturn(Optional.empty());
+        when(paymentRepository.findByPaymentCodeForUpdate("MS123"))
+                .thenReturn(Optional.of(payment));
+        when(orderRepository.findAllByPaymentIdForUpdateOrdered(payment.getId()))
+                .thenReturn(List.of());
+        when(transactionRepository.saveAndFlush(any()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        new SePayWebhookProcessor(paymentRepository, transactionRepository, orderRepository)
+                .processFirstDelivery(request, "{}");
+
+        assertEquals(PaymentSessionStatus.PAID, payment.getStatus());
+        verify(paymentRepository).findByPaymentCodeForUpdate("BANK_REFERENCE");
+        verify(paymentRepository).findByPaymentCodeForUpdate("MS123");
+    }
+
+    @Test
     void exactConcurrentUniqueCollisionIsIdempotentSuccess() {
         SePayWebhookRequest request = request();
         String rawPayload = "{\"id\":99}";

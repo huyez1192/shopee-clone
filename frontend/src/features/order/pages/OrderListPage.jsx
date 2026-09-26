@@ -76,14 +76,6 @@ function OrderListPage() {
           </div>
 
           <nav className={styles.sideNav}>
-            <Link to="/profile">
-              👤 Tài Khoản Của Tôi
-            </Link>
-
-            <Link to="/addresses">
-              📍 Địa Chỉ
-            </Link>
-
             <Link
               to="/orders"
               className={styles.sideActive}

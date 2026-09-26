@@ -64,3 +64,12 @@
 .content {
   flex: 1;
 }
+
+@media (max-width: 600px) {
+  .topContainer { width: calc(100% - 24px); }
+  .topContainer > span:not(:first-child), .topRight { display: none; }
+  .headerContainer { width: calc(100% - 24px); height: 76px; }
+  .logo { width: 105px; }
+  .divider { margin: 0 12px; }
+  .title { font-size: 18px; }
+}

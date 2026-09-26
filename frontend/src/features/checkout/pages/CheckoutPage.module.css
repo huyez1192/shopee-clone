@@ -579,3 +579,16 @@
     width: auto;
   }
 }
+
+@media (max-width: 600px) {
+  .container { width: calc(100% - 20px); }
+  .addressSection, .productRow, .shopHeader, .shippingRow, .shopTotal, .paymentHeader, .paymentDescription, .summary, .orderFooter { padding-right: 14px; padding-left: 14px; }
+  .receiver { flex-wrap: wrap; white-space: normal; }
+  .productRow { padding-top: 14px; padding-bottom: 14px; }
+  .productName { max-width: none; white-space: normal; overflow-wrap: anywhere; }
+  .shippingRow, .shopTotal { align-items: flex-start; flex-direction: column; justify-content: center; gap: 7px; }
+  .summaryRow, .summaryTotal { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
+  .summaryTotal strong { font-size: 22px; }
+  .orderFooter { align-items: stretch; flex-direction: column; gap: 14px; }
+  .orderButton { width: 100%; }
+}

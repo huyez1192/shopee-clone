@@ -403,3 +403,36 @@
   color: #ee4d2d;
   font-size: 13px;
 }
+
+@media (max-width: 600px) {
+  .page { padding-top: 10px; }
+  .container { width: calc(100% - 20px); }
+  .mainProduct { gap: 18px; padding: 12px; }
+  .productInfo { padding: 0; }
+  .productName { font-size: 19px; overflow-wrap: anywhere; }
+  .meta { flex-wrap: wrap; }
+  .priceBox { padding: 14px; }
+  .price { flex-wrap: wrap; font-size: 25px; }
+  .optionRow { grid-template-columns: 1fr; gap: 8px; }
+  .optionLabel { padding-top: 0; }
+  .quantityArea { align-items: flex-start; flex-direction: column; }
+  .actions { flex-wrap: wrap; }
+  .addToCartButton, .buyNowButton { min-width: 0; padding: 0 16px; flex: 1 1 145px; }
+  .variantHint, .successMessage, .actionError { margin-left: 0; }
+  .shopSection { align-items: flex-start; padding: 18px 14px; }
+  .shopMain { min-width: 0; flex: 1; }
+  .chatShopButton, .viewShopButton { flex: 1 1 140px; text-align: center; }
+  .detailSection { padding: 18px 12px; }
+  .detailRow { grid-template-columns: 1fr; gap: 6px; padding: 0; }
+  .description { padding: 0; overflow-wrap: anywhere; }
+}
+
+.chatShopButton {
+  padding: 9px 18px;
+  color: #ee4d2d;
+  cursor: pointer;
+  background: #fff5f2;
+  border: 1px solid #ee4d2d;
+}
+
+.chatShopButton:disabled { cursor: wait; opacity: .65; }

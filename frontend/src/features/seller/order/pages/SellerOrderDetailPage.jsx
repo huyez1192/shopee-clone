@@ -1,5 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
+import LoadingState from "../../../../components/common/LoadingState";
+import ErrorState from "../../../../components/common/ErrorState";
+import EmptyState from "../../../../components/common/EmptyState";
 
 import fallbackProductImage from "../../../../assets/images/product-placeholder.png";
 import { queryKeys } from "../../../../query/queryKeys";
@@ -117,10 +120,6 @@ function SellerOrderDetailPage() {
     },
   });
 
-  const errorMessage = error
-    ? error?.response?.data?.message || "Không thể tải chi tiết đơn hàng."
-    : "";
-
   const isProcessing = orderActionMutation.isPending;
 
   function loadOrder() {
@@ -139,35 +138,15 @@ function SellerOrderDetailPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className={styles.stateBox}>
-        Đang tải chi tiết đơn hàng...
-      </div>
-    );
+    return <LoadingState message="Đang tải chi tiết đơn hàng..." />;
   }
 
-  if (errorMessage) {
-    return (
-      <div className={styles.stateBox}>
-        <p>{errorMessage}</p>
-
-        <button
-          type="button"
-          onClick={loadOrder}
-          className={styles.retryButton}
-        >
-          Thử lại
-        </button>
-      </div>
-    );
+  if (error) {
+    return <ErrorState message={getApiErrorMessage(error, "Không thể tải chi tiết đơn hàng.")} onRetry={loadOrder} />;
   }
 
   if (!order) {
-    return (
-      <div className={styles.stateBox}>
-        Không tìm thấy đơn hàng.
-      </div>
-    );
+    return <EmptyState title="Không tìm thấy đơn hàng" description="Đơn hàng có thể đã bị xóa hoặc bạn không có quyền truy cập." />;
   }
 
   const waitingForPayment =

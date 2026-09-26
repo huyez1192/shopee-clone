@@ -20,6 +20,7 @@ function SePayPaymentPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const [copied, setCopied] = useState(false);
 
   const paymentQuery = useQuery({
     queryKey: queryKeys.payment.detail(paymentCode),
@@ -97,6 +98,16 @@ function SePayPaymentPage() {
   const awaitingBackendExpiration = latestStatus === "PENDING" && remainingSeconds === 0;
   const isTerminal = TERMINAL_STATUSES.has(latestStatus);
 
+  async function copyPaymentCode() {
+    try {
+      await navigator.clipboard.writeText(payment.paymentCode);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  }
+
   return (
     <main className={styles.page}>
       <div className={styles.card}>
@@ -134,7 +145,15 @@ function SePayPaymentPage() {
               <InfoRow label="Chủ tài khoản" value={payment.accountName} />
               <InfoRow label="Số tài khoản" value={payment.accountNumber} />
               <InfoRow label="Số tiền" value={`₫${formatPrice(payment.amount)}`} valueClass={styles.amount} />
-              <InfoRow label="Nội dung chuyển khoản" value={payment.paymentCode} valueClass={styles.paymentCode} />
+              <div className={styles.infoRow}>
+                <span>Nội dung chuyển khoản</span>
+                <span className={styles.codeWithAction}>
+                  <strong className={styles.paymentCode}>{payment.paymentCode}</strong>
+                  <button type="button" onClick={copyPaymentCode} aria-label="Sao chép nội dung chuyển khoản">
+                    {copied ? "Đã chép" : "Sao chép"}
+                  </button>
+                </span>
+              </div>
               <InfoRow label="Trạng thái" value={latestStatus} valueClass={styles.pending} />
               <InfoRow
                 label="Thời gian còn lại"

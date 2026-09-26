@@ -82,6 +82,8 @@
   font-size: 14px;
 }
 
+.info strong, .info a { min-width: 0; overflow-wrap: anywhere; text-align: right; }
+
 .info a {
   color: #ee4d2d;
   text-decoration: none;
@@ -126,4 +128,12 @@
   background: #fff;
 
   border: 1px solid #ee4d2d;
+}
+
+@media (max-width: 520px) {
+  .page { min-height: 0; padding: 24px 10px 40px; }
+  .card { padding: 30px 16px; }
+  .info > div { gap: 16px; text-align: left; }
+  .actions { align-items: stretch; flex-direction: column; }
+  .orderButton, .homeButton { width: 100%; min-width: 0; }
 }

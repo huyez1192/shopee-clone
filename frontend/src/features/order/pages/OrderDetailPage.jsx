@@ -184,14 +184,6 @@ function OrderDetailPage() {
           </div>
 
           <nav className={styles.menu}>
-            <Link to="/profile">
-              👤 Tài Khoản Của Tôi
-            </Link>
-
-            <Link to="/addresses">
-              📍 Địa Chỉ
-            </Link>
-
             <Link
               to="/orders"
               className={styles.menuActive}
@@ -416,14 +408,6 @@ function OrderDetailPage() {
                     ) : <span className={styles.reviewedLabel}>Đã đánh giá</span>
                   )}
 
-                  <Link
-                    to={`/shops/${order.shopId}`}
-                    className={
-                      styles.secondaryButton
-                    }
-                  >
-                    Xem Shop
-                  </Link>
                 </div>
               </section>
 
@@ -612,11 +596,6 @@ function OrderProducts({ order }) {
           </strong>
         </div>
 
-        <Link
-          to={`/shops/${order.shopId}`}
-        >
-          Xem Shop
-        </Link>
       </div>
 
       {order.items?.map((item) => {

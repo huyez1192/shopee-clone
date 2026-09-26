@@ -77,7 +77,7 @@ function CartItem({
         </div>
       </div>
 
-      <div className={styles.variantColumn}>
+      <div className={styles.variantColumn} data-label="Phân loại">
         {variantText ? (
           <>
             <span className={styles.variantLabel}>
@@ -91,11 +91,11 @@ function CartItem({
         )}
       </div>
 
-      <div className={styles.priceColumn}>
+      <div className={styles.priceColumn} data-label="Đơn giá">
         ₫{formatPrice(item.unitPrice)}
       </div>
 
-      <div className={styles.quantityColumn}>
+      <div className={styles.quantityColumn} data-label="Số lượng">
         <button
           type="button"
           disabled={
@@ -123,7 +123,7 @@ function CartItem({
         </button>
       </div>
 
-      <div className={styles.totalColumn}>
+      <div className={styles.totalColumn} data-label="Thành tiền">
         ₫{formatPrice(item.lineTotal)}
       </div>
 

@@ -118,7 +118,11 @@
 
 .paymentCode {
   color: #ee4d2d !important;
+  overflow-wrap: anywhere;
 }
+
+.codeWithAction { display: flex; min-width: 0; align-items: center; justify-content: flex-end; gap: 8px; }
+.codeWithAction button { flex-shrink: 0; padding: 5px 8px; color: #ee4d2d; cursor: pointer; background: #fff; border: 1px solid #ee4d2d; border-radius: 3px; font-size: 11px; }
 
 .pending {
   color: #f5a623 !important;
@@ -211,7 +215,20 @@
 }
 
 @media (max-width: 720px) {
+  .page { min-height: 0; padding: 16px 10px 40px; }
+  .header { padding: 22px 16px; }
+  .header h1 { font-size: 21px; }
   .content {
     grid-template-columns: 1fr;
+    gap: 22px;
+    padding: 22px 16px;
   }
+  .qrImage { width: min(240px, 75vw); }
+  .notice { margin: 0 16px; }
+  .actions { align-items: stretch; flex-direction: column; padding: 22px 16px; }
+  .actions a, .actions > a:not(.orderLink) { width: 100%; min-width: 0; }
+  .infoRow { align-items: flex-start; gap: 12px; }
+  .infoRow > span:first-child { flex: 0 0 42%; }
+  .infoRow strong { min-width: 0; overflow-wrap: anywhere; }
+  .codeWithAction { align-items: flex-end; flex-direction: column; }
 }

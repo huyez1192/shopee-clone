@@ -25,13 +25,7 @@ function ProductCard({ product }) {
       className={styles.card}
     >
       <div className={styles.imageWrapper}>
-{/*         <img */}
-{/*           src={product.imageUrl} */}
-{/*           alt={product.name} */}
-{/*           className={styles.image} */}
-{/*           loading="lazy" */}
-{/*         /> */}
-        <img           /* dùng tạm cái này vì img trong db đang là seed data: "imageUrl": "https://example.com/iphone15.jpg" */
+        <img
           src={product.imageUrl || fallbackProductImage}
           alt={product.name}
           className={styles.image}
@@ -40,9 +34,6 @@ function ProductCard({ product }) {
             event.currentTarget.src = fallbackProductImage;
           }}
         />
-
-
-
         {isOutOfStock && (
           <div className={styles.outOfStock}>
             Hết hàng

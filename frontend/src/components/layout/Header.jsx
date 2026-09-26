@@ -7,6 +7,7 @@ import useAuth from "../../features/auth/hooks/useAuth";
 import NotificationDropdown from "../../features/notification/components/NotificationDropdown";
 import { getUnreadNotificationCount } from "../../features/notification/api/notificationApi";
 import { queryKeys } from "../../query/queryKeys";
+import { getCustomerUnreadCount } from "../../features/chat/api/chatApi";
 
 import styles from "./Header.module.css";
 
@@ -72,6 +73,12 @@ function Header() {
   });
 
   const unreadCount = Math.max(0, Number(unreadCountQuery.data?.count) || 0);
+  const chatUnreadQuery = useQuery({
+    queryKey: queryKeys.chat.customerUnread(),
+    queryFn: getCustomerUnreadCount,
+    enabled: isAuthenticated,
+  });
+  const chatUnread = Math.max(0, Number(chatUnreadQuery.data?.count) || 0);
 
 
 
@@ -97,9 +104,9 @@ function Header() {
 
             <span className={styles.separator} />
 
-            <Link to="/shops/register">
+            <span title="Chưa có trang đăng ký người bán trong frontend hiện tại">
               Trở thành Người bán Shopee
-            </Link>
+            </span>
 
             <span className={styles.separator} />
 
@@ -113,6 +120,16 @@ function Header() {
           </nav>
 
           <nav className={styles.accountNavigation}>
+            {isAuthenticated && (
+              <Link to="/chat" className={styles.chatLink}>
+                Tin Nhắn
+                {chatUnread > 0 && (
+                  <span className={styles.chatBadge} aria-label={`${chatUnread} tin nhắn chưa đọc`}>
+                    {chatUnread > 99 ? "99+" : chatUnread}
+                  </span>
+                )}
+              </Link>
+            )}
             <div className={styles.notificationArea}>
               <button
                 type="button"
@@ -151,9 +168,9 @@ function Header() {
 
             {isAuthenticated ? (
               <div className={styles.userMenu}>
-                <Link to="/profile">
+                <span className={styles.userName}>
                   {user?.fullName || user?.email}
-                </Link>
+                </span>
 
                 <button
                   type="button"

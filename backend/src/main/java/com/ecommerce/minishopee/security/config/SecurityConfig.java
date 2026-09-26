@@ -50,6 +50,9 @@ public class SecurityConfig {
 
                             .requestMatchers("/error").permitAll()
 
+                            // WebSocket handshake is public; STOMP CONNECT requires a valid JWT.
+                            .requestMatchers("/ws", "/ws/**").permitAll()
+
                             // Đăng ký, đăng nhập
                             .requestMatchers("/api/auth/**").permitAll()
 

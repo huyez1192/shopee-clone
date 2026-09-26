@@ -38,6 +38,20 @@ export const queryKeys = {
     unreadCount: () => ["notifications", "unread-count"],
   },
 
+  chat: {
+    all: ["chat"],
+    customerConversationsRoot: ["chat", "customer", "conversations"],
+    customerConversations: (params = {}) => ["chat", "customer", "conversations", params],
+    sellerConversationsRoot: ["chat", "seller", "conversations"],
+    sellerConversations: (params = {}) => ["chat", "seller", "conversations", params],
+    conversation: (id) => ["chat", "conversation", id],
+    messagesAll: ["chat", "messages"],
+    messagesRoot: (id) => ["chat", "messages", Number(id)],
+    messages: (id, params = {}) => ["chat", "messages", Number(id), params],
+    customerUnread: () => ["chat", "customer", "unread"],
+    sellerUnread: () => ["chat", "seller", "unread"],
+  },
+
   reviews: {
     all: ["reviews"],
     product: (productId, params = {}) => ["reviews", "product", productId, params],

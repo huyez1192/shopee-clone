@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import useAuth from "../hooks/useAuth";
+import { getApiErrorMessage } from "../../../utils/getApiErrorMessage";
 
 import styles from "./RegisterPage.module.css";
 
@@ -18,6 +19,7 @@ function RegisterPage() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -30,9 +32,10 @@ function RegisterPage() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    setErrorMessage("");
 
     if (form.password !== form.confirmPassword) {
-      alert("Mật khẩu xác nhận không khớp.");
+      setErrorMessage("Mật khẩu xác nhận không khớp.");
       return;
     }
 
@@ -49,7 +52,7 @@ function RegisterPage() {
 
       navigate("/", { replace: true });
     } catch (error) {
-      alert(error?.response?.data?.message || error?.message || "Không thể đăng ký tài khoản.");
+      setErrorMessage(getApiErrorMessage(error, "Không thể đăng ký tài khoản."));
     } finally {
       setIsSubmitting(false);
     }
@@ -62,6 +65,8 @@ function RegisterPage() {
       <form onSubmit={handleSubmit} className={styles.form}>
         <input
           name="fullName"
+          aria-label="Họ và tên"
+          required
           value={form.fullName}
           placeholder="Họ và tên"
           onChange={handleChange}
@@ -70,6 +75,8 @@ function RegisterPage() {
         <input
           type="email"
           name="email"
+          aria-label="Email"
+          required
           value={form.email}
           placeholder="Email"
           onChange={handleChange}
@@ -77,6 +84,9 @@ function RegisterPage() {
 
         <input
           name="phone"
+          type="tel"
+          aria-label="Số điện thoại"
+          required
           value={form.phone}
           placeholder="Số điện thoại"
           onChange={handleChange}
@@ -85,6 +95,10 @@ function RegisterPage() {
         <input
           type="password"
           name="password"
+          aria-label="Mật khẩu"
+          autoComplete="new-password"
+          minLength={6}
+          required
           value={form.password}
           placeholder="Mật khẩu"
           onChange={handleChange}
@@ -93,10 +107,16 @@ function RegisterPage() {
         <input
           type="password"
           name="confirmPassword"
+          aria-label="Nhập lại mật khẩu"
+          autoComplete="new-password"
+          minLength={6}
+          required
           value={form.confirmPassword}
           placeholder="Nhập lại mật khẩu"
           onChange={handleChange}
         />
+
+        {errorMessage && <p className={styles.errorMessage} role="alert">{errorMessage}</p>}
 
         <button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "ĐANG ĐĂNG KÝ..." : "ĐĂNG KÝ"}
@@ -109,12 +129,12 @@ function RegisterPage() {
         </div>
 
         <div className={styles.social}>
-          <button type="button">
+          <button type="button" disabled title="Tính năng chưa được hỗ trợ">
             <strong>f</strong>
             Facebook
           </button>
 
-          <button type="button">
+          <button type="button" disabled title="Tính năng chưa được hỗ trợ">
             <strong>G</strong>
             Google
           </button>

@@ -1,0 +1,56 @@
+.page { width: min(1180px, calc(100% - 32px)); margin: 24px auto; color: #333; }
+.pageHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.pageHeader h1 { margin: 0 0 6px; font-size: 24px; }
+.pageHeader p { margin: 0; color: #777; }
+.reconnecting { padding: 6px 10px; color: #9a6700; background: #fff7d6; border-radius: 4px; font-size: 13px; }
+.workspace { display: grid; grid-template-columns: 340px minmax(0, 1fr); min-height: 620px; overflow: hidden; background: #fff; border: 1px solid #e8e8e8; border-radius: 6px; }
+.conversationPane { min-width: 0; border-right: 1px solid #eee; }
+.conversationPane > h2 { padding: 18px; margin: 0; border-bottom: 1px solid #eee; font-size: 16px; }
+.conversationList { max-height: 510px; overflow-y: auto; }
+.conversationItem { display: grid; width: 100%; padding: 14px; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; text-align: left; cursor: pointer; background: #fff; border: 0; border-bottom: 1px solid #f0f0f0; }
+.conversationItem:hover, .conversationItem.active { background: #fff5f2; }
+.avatar { display: grid; width: 44px; height: 44px; place-items: center; overflow: hidden; color: #fff; background: #ee4d2d; border-radius: 50%; font-weight: 700; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.conversationText { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.conversationText strong, .conversationText small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.conversationText small { color: #777; }
+.meta { display: flex; align-items: flex-end; flex-direction: column; gap: 8px; color: #999; font-size: 11px; }
+.meta b { min-width: 19px; padding: 2px 5px; color: #fff; text-align: center; background: #ee4d2d; border-radius: 10px; }
+.threadPane { display: flex; min-width: 0; flex-direction: column; }
+.noThread { display: grid; min-height: 620px; place-items: center; text-align: center; color: #777; }
+.threadHeader { display: flex; height: 62px; padding: 0 18px; align-items: center; gap: 10px; border-bottom: 1px solid #eee; }
+.threadHeader strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.threadHeader button { display: none; cursor: pointer; background: none; border: 0; font-size: 28px; }
+.messages { display: flex; min-height: 440px; max-height: 500px; padding: 20px; flex: 1; flex-direction: column; gap: 10px; overflow-y: auto; background: #fafafa; }
+.emptyMessages { margin: auto; color: #999; }
+.message { max-width: min(70%, 520px); padding: 9px 12px; border-radius: 12px; box-shadow: 0 1px 2px #ddd; }
+.message p { margin: 0 0 5px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.message time { display: block; color: #999; text-align: right; font-size: 11px; }
+.mine { align-self: flex-end; background: #fff0eb; border-bottom-right-radius: 3px; }
+.theirs { align-self: flex-start; background: #fff; border-bottom-left-radius: 3px; }
+.composer { display: grid; padding: 12px; grid-template-columns: minmax(0, 1fr) 80px; gap: 10px; border-top: 1px solid #eee; }
+.composer textarea { min-height: 48px; max-height: 110px; padding: 10px; resize: vertical; border: 1px solid #ddd; border-radius: 4px; }
+.composer button { color: #fff; cursor: pointer; background: #ee4d2d; border: 0; border-radius: 4px; }
+.composer button:disabled { cursor: not-allowed; opacity: .55; }
+.sendError { padding: 0 12px 10px; margin: 0; color: #c62828; font-size: 13px; }
+@media (max-width: 760px) {
+  .page { width: 100%; margin: 0; }
+  .pageHeader { padding: 16px; }
+  .workspace { display: block; min-height: calc(100vh - 170px); border-radius: 0; }
+  .threadSelected .conversationPane { display: none; }
+  .workspace:not(.threadSelected) .threadPane { display: none; }
+  .conversationPane { border-right: 0; }
+  .threadHeader button { display: block; }
+  .message { max-width: 85%; }
+  .conversationList { max-height: calc(100vh - 290px); }
+  .messages { min-height: 0; height: calc(100vh - 330px); max-height: none; padding: 14px 12px; }
+  .composer { position: sticky; bottom: 0; grid-template-columns: minmax(0, 1fr) 68px; background: #fff; }
+  .composer textarea { resize: none; }
+}
+
+@media (max-width: 430px) {
+  .pageHeader p { font-size: 13px; }
+  .pageHeader { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .conversationItem { grid-template-columns: 40px minmax(0, 1fr) auto; padding: 12px; }
+  .avatar { width: 40px; height: 40px; }
+}

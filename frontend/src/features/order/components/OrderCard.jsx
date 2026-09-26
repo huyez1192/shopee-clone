@@ -51,12 +51,6 @@ function OrderCard({ order }) {
 
           <strong>{order.shopName}</strong>
 
-          <Link
-            to={`/shops/${order.shopId}`}
-            className={styles.shopButton}
-          >
-            Xem Shop
-          </Link>
         </div>
 
         <div className={styles.statusArea}>

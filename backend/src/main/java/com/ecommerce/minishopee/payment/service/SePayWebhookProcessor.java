@@ -16,12 +16,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class SePayWebhookProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(SePayWebhookProcessor.class);
+    private static final Pattern PAYMENT_CODE_PATTERN =
+            Pattern.compile("(?i)(?<![A-Z0-9])MS[A-Z0-9]{3,46}(?![A-Z0-9])");
 
     private final PaymentRepository paymentRepository;
     private final SePayTransactionRepository transactionRepository;
@@ -86,13 +94,49 @@ public class SePayWebhookProcessor {
     }
 
     private Payment findPaymentForUpdate(SePayWebhookRequest request) {
-        if (!"in".equalsIgnoreCase(request.getTransferType())
-                || request.getCode() == null
-                || request.getCode().isBlank()) {
+        if (!"in".equalsIgnoreCase(request.getTransferType())) {
             return null;
         }
 
-        return paymentRepository.findByPaymentCodeForUpdate(request.getCode()).orElse(null);
+        for (String candidate : paymentCodeCandidates(request)) {
+            Optional<Payment> payment = paymentRepository.findByPaymentCodeForUpdate(candidate);
+            if (payment.isPresent()) {
+                return payment.get();
+            }
+        }
+
+        return null;
+    }
+
+    private Set<String> paymentCodeCandidates(SePayWebhookRequest request) {
+        Set<String> candidates = new LinkedHashSet<>();
+        addExactCandidate(candidates, request.getCode());
+        addEmbeddedCandidates(candidates, request.getContent());
+        addEmbeddedCandidates(candidates, request.getDescription());
+        return candidates;
+    }
+
+    private void addExactCandidate(Set<String> candidates, String value) {
+        if (value != null && !value.isBlank()) {
+            String candidate = value.trim();
+            candidates.add(candidate);
+
+            String uppercaseCandidate = candidate.toUpperCase(Locale.ROOT);
+            if (!uppercaseCandidate.equals(candidate)) {
+                candidates.add(uppercaseCandidate);
+            }
+        }
+    }
+
+    private void addEmbeddedCandidates(Set<String> candidates, String value) {
+        if (value == null || value.isBlank()) {
+            return;
+        }
+
+        Matcher matcher = PAYMENT_CODE_PATTERN.matcher(value);
+        while (matcher.find()) {
+            candidates.add(matcher.group().toUpperCase(Locale.ROOT));
+        }
     }
 
     private void validatePaymentDetails(SePayWebhookRequest request, Payment payment) {

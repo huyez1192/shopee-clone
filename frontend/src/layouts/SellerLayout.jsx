@@ -8,27 +8,16 @@ function SellerLayout() {
   return (
     <div className={styles.layout}>
       <header className={styles.header}>
-        <Link
-          to="/seller/orders"
-          className={styles.brand}
-        >
-          <Link to="/" className={styles.logoLink}>
-              <img
-                src={shopeeCheckoutLogo}
-                alt="Shopee"
-                className={styles.logo}
-              />
-            </Link>
-
-          <span>Trang chủ / Đơn Bán</span>
-        </Link>
+        <div className={styles.brand}>
+          <Link to="/" className={styles.logoLink} aria-label="Về trang chủ Shopee">
+            <img src={shopeeCheckoutLogo} alt="Shopee" className={styles.logo} />
+          </Link>
+          <Link to="/seller" className={styles.sellerHome}>Kênh Người Bán</Link>
+        </div>
 
         <div className={styles.headerRight}>
-          <span>🔔</span>
-
-          <button type="button">
-            Trung Tâm Trợ Giúp
-          </button>
+          <Link to="/notifications" aria-label="Xem thông báo">🔔</Link>
+          <Link to="/">Về trang mua sắm</Link>
         </div>
       </header>
 
@@ -37,9 +26,9 @@ function SellerLayout() {
           <div className={styles.menuGroup}>
             <strong>▣ Quản Lý Đơn hàng</strong>
 
-            <Link to="/seller/orders">
+            <NavLink to="/seller/orders" className={({ isActive }) => isActive ? styles.activeMenu : undefined}>
               Tất cả
-            </Link>
+            </NavLink>
 
             <span>Xử Lý Đơn Hàng Loạt</span>
 
@@ -51,25 +40,35 @@ function SellerLayout() {
           <div className={styles.menuGroup}>
             <strong>▱ Quản Lý Sản Phẩm</strong>
 
-            <Link to="/seller/products">
+            <NavLink to="/seller/products" end className={({ isActive }) => isActive ? styles.activeMenu : undefined}>
               Tất Cả Sản Phẩm
-            </Link>
+            </NavLink>
 
-            <Link to="/seller/products/create">
+            <NavLink to="/seller/products/create" className={({ isActive }) => isActive ? styles.activeMenu : undefined}>
               Thêm Sản Phẩm
-            </Link>
+            </NavLink>
 
-            <Link to="/seller/inventory">
+            <NavLink to="/seller/inventory" className={({ isActive }) => isActive ? styles.activeMenu : undefined}>
                 Quản Lý Tồn Kho
-            </Link>
+            </NavLink>
           </div>
 
           <div className={styles.menuGroup}>
             <strong>★ Quản Lý Đánh Giá</strong>
 
-            <Link to="/seller/reviews">
+            <NavLink to="/seller/reviews" className={({ isActive }) => isActive ? styles.activeMenu : undefined}>
               Đánh Giá Shop
-            </Link>
+            </NavLink>
+          </div>
+
+          <div className={styles.menuGroup}>
+            <strong>✉ Chăm Sóc Khách Hàng</strong>
+            <NavLink
+              to="/seller/chat"
+              className={({ isActive }) => isActive ? styles.activeMenu : undefined}
+            >
+              Tin nhắn
+            </NavLink>
           </div>
 
           <div className={styles.menuGroup}>

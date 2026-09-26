@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import EmptyState from "../../../components/common/EmptyState";
 import ErrorState from "../../../components/common/ErrorState";
@@ -18,6 +18,7 @@ import styles from "./ProductDetailPage.module.css";
 import useAuth from "../../auth/hooks/useAuth";
 import { addCartItem } from "../../cart/api/cartApi";
 import ProductReviews from "../../review/components/ProductReviews";
+import { startConversation } from "../../chat/api/chatApi";
 
 function formatPrice(price) {
   if (price == null) {
@@ -41,6 +42,20 @@ function ProductDetailPage() {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const chatMutation = useMutation({
+    mutationFn: () => startConversation(productId),
+    onSuccess: (conversation) => navigate(`/chat/${conversation.conversationId}`),
+    onError: (error) => setActionError(getApiErrorMessage(error, "Không thể bắt đầu cuộc trò chuyện.")),
+  });
+
+  function handleChatNow() {
+    setActionError("");
+    if (!isAuthenticated) {
+      navigate("/login", { state: { redirectPath: `${location.pathname}${location.search}` } });
+      return;
+    }
+    chatMutation.mutate();
+  }
 
   const {
     data: product = null,
@@ -581,12 +596,14 @@ function ProductDetailPage() {
             </span>
           </div>
 
-          <Link
-            to={`/shops/${product.shopId}`}
-            className={styles.viewShopButton}
+          <button
+            type="button"
+            className={styles.chatShopButton}
+            onClick={handleChatNow}
+            disabled={chatMutation.isPending}
           >
-            Xem Shop
-          </Link>
+            {chatMutation.isPending ? "Đang mở..." : "Chat ngay"}
+          </button>
 
           <div className={styles.shopStat}>
             <span>Sản phẩm</span>

@@ -128,6 +128,7 @@
 }
 
 @media (max-width: 850px) {
+  .hero { height: auto; min-height: calc(100vh - 84px); padding: 24px 0 40px; }
   .heroContainer {
     display: flex;
 
@@ -141,10 +142,22 @@
   }
 
   .formArea {
+    padding-top: 0;
     width: 100%;
   }
+
+  .logoImage { display: none; }
 
   .brand img {
     width: 95px;
   }
+}
+
+@media (max-width: 480px) {
+  .header { height: 68px; }
+  .headerContainer { width: calc(100% - 24px); }
+  .brand { gap: 8px; font-size: 17px; }
+  .brand img { width: 82px; }
+  .help { font-size: 12px; }
+  .heroContainer { width: calc(100% - 24px); }
 }

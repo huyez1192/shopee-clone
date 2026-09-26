@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import LoadingState from "../../../../components/common/LoadingState";
+import ErrorState from "../../../../components/common/ErrorState";
+import { getApiErrorMessage } from "../../../../utils/getApiErrorMessage";
 
 import fallbackProductImage from "../../../../assets/images/product-placeholder.png";
 import { queryKeys } from "../../../../query/queryKeys";
@@ -107,10 +110,6 @@ function SellerInventoryPage() {
   const isLoading = isProductsLoading || variantsLoading;
   const queryError = productsError || variantsError;
 
-  const errorMessage = queryError
-    ? queryError?.response?.data?.message || "Không thể tải dữ liệu tồn kho."
-    : "";
-
   const isSaving = updateStockMutation.isPending;
 
   const inventorySummary = useMemo(() => {
@@ -195,23 +194,11 @@ function SellerInventoryPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className={styles.state}>
-        Đang tải dữ liệu tồn kho...
-      </div>
-    );
+    return <LoadingState message="Đang tải dữ liệu tồn kho..." />;
   }
 
-  if (errorMessage) {
-    return (
-      <div className={styles.state}>
-        <p>{errorMessage}</p>
-
-        <button type="button" onClick={loadInventory}>
-          Thử lại
-        </button>
-      </div>
-    );
+  if (queryError) {
+    return <ErrorState message={getApiErrorMessage(queryError, "Không thể tải dữ liệu tồn kho.")} onRetry={loadInventory} />;
   }
 
   return (

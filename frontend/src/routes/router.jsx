@@ -37,6 +37,8 @@ import SellerInventoryPage from "../features/seller/inventory/pages/SellerInvent
 import SellerReviewPage from "../features/seller/review/pages/SellerReviewPage";
 import SellerStatisticsPage from "../features/seller/statistics/pages/SellerStatisticsPage";
 import NotificationPage from "../features/notification/pages/NotificationPage";
+import BuyerChatPage from "../features/chat/pages/BuyerChatPage";
+import SellerChatPage from "../features/chat/pages/SellerChatPage";
 
 
 const router = createBrowserRouter([
@@ -92,6 +94,14 @@ const router = createBrowserRouter([
           {
             path: "notifications",
             element: <NotificationPage />,
+          },
+          {
+            path: "chat",
+            element: <BuyerChatPage />,
+          },
+          {
+            path: "chat/:conversationId",
+            element: <BuyerChatPage />,
           },
         ],
       },
@@ -182,6 +192,14 @@ const router = createBrowserRouter([
             {
               path: "reviews",
               element: <SellerReviewPage />,
+            },
+            {
+              path: "chat",
+              element: <SellerChatPage />,
+            },
+            {
+              path: "chat/:conversationId",
+              element: <SellerChatPage />,
             },
           ],
         },

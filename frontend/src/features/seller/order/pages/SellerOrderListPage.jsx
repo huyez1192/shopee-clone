@@ -1,6 +1,9 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import LoadingState from "../../../../components/common/LoadingState";
+import ErrorState from "../../../../components/common/ErrorState";
+import { getApiErrorMessage } from "../../../../utils/getApiErrorMessage";
 
 import fallbackProductImage from "../../../../assets/images/product-placeholder.png";
 import { queryKeys } from "../../../../query/queryKeys";
@@ -80,10 +83,6 @@ function SellerOrderListPage() {
       ]);
     },
   });
-
-  const errorMessage = error
-    ? error?.response?.data?.message || "Không thể tải danh sách đơn hàng."
-    : "";
 
   const processingOrderId = orderActionMutation.isPending
     ? orderActionMutation.variables?.orderId ?? null
@@ -208,27 +207,11 @@ function SellerOrderListPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className={styles.stateBox}>
-        Đang tải đơn hàng...
-      </div>
-    );
+    return <LoadingState message="Đang tải đơn hàng..." />;
   }
 
-  if (errorMessage) {
-    return (
-      <div className={styles.stateBox}>
-        <p>{errorMessage}</p>
-
-        <button
-          type="button"
-          onClick={loadOrders}
-          className={styles.retryButton}
-        >
-          Thử lại
-        </button>
-      </div>
-    );
+  if (error) {
+    return <ErrorState message={getApiErrorMessage(error, "Không thể tải danh sách đơn hàng.")} onRetry={loadOrders} />;
   }
 
   return (

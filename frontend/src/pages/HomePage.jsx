@@ -333,7 +333,7 @@ function HomePage() {
                   />
 
                   <strong>
-                    {["Ưu đãi đến 50%", "Mua 1 tặng 1", "Mua 1 được 2", "Deal siêu hot"][index % 4]}
+                    {["Ưu đãi đến 20%", "Mua là có quà", "Siêu sale", "Deal siêu hot"][index % 4]}
                   </strong>
                 </Link>
               ))}

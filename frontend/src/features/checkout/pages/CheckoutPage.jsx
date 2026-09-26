@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import EmptyState from "../../../components/common/EmptyState";
 import ErrorState from "../../../components/common/ErrorState";
@@ -202,9 +202,7 @@ function CheckoutPage() {
           Bạn chưa có địa chỉ nhận hàng.
         </p>
 
-        <Link to="/addresses">
-          Thêm địa chỉ nhận hàng
-        </Link>
+        <span>Vui lòng thêm địa chỉ qua API hoặc dữ liệu tài khoản trước khi thanh toán.</span>
       </main>
     );
   }

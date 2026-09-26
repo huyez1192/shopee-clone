@@ -2,6 +2,7 @@ package com.ecommerce.minishopee.common.exception;
 
 import com.ecommerce.minishopee.address.exception.AddressNotFoundException;
 import com.ecommerce.minishopee.cart.exception.CartItemNotFoundException;
+import com.ecommerce.minishopee.chat.exception.ChatConversationNotFoundException;
 import com.ecommerce.minishopee.category.exception.CategoryNotFoundException;
 import com.ecommerce.minishopee.order.exception.OrderNotFoundException;
 import com.ecommerce.minishopee.notification.exception.NotificationNotFoundException;
@@ -71,7 +72,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({ReviewNotFoundException.class, OrderItemNotFoundException.class,
-            NotificationNotFoundException.class})
+            NotificationNotFoundException.class, ChatConversationNotFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, Object> handleReviewNotFound(RuntimeException exception, HttpServletRequest request) {
         return error(HttpStatus.NOT_FOUND, exception.getMessage(), request);

@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import LoadingState from "../../../../components/common/LoadingState";
+import ErrorState from "../../../../components/common/ErrorState";
+import { getApiErrorMessage } from "../../../../utils/getApiErrorMessage";
 
 import fallbackProductImage from "../../../../assets/images/product-placeholder.png";
 import { queryKeys } from "../../../../query/queryKeys";
@@ -52,10 +55,6 @@ function SellerProductListPage() {
       select: (response) => Array.isArray(response) ? response : [],
     })),
   });
-
-  const errorMessage = error
-    ? error?.response?.data?.message || "Không thể tải danh sách sản phẩm."
-    : "";
 
   const variantsByProduct = useMemo(() => {
     const result = {};
@@ -135,26 +134,11 @@ function SellerProductListPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className={styles.state}>
-        Đang tải sản phẩm...
-      </div>
-    );
+    return <LoadingState message="Đang tải sản phẩm..." />;
   }
 
-  if (errorMessage) {
-    return (
-      <div className={styles.state}>
-        <p>{errorMessage}</p>
-
-        <button
-          type="button"
-          onClick={loadProducts}
-        >
-          Thử lại
-        </button>
-      </div>
-    );
+  if (error) {
+    return <ErrorState message={getApiErrorMessage(error, "Không thể tải danh sách sản phẩm.")} onRetry={loadProducts} />;
   }
 
   return (
@@ -368,10 +352,6 @@ function SellerProductListPage() {
                     <div
                       className={styles.actionCell}
                     >
-                      <Link to={`/seller/products/${product.id}/edit`}>
-                        Cập nhật
-                      </Link>
-
                       {variantCount > 0 && (
                         <button
                           type="button"

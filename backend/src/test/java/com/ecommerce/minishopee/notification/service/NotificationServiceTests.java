@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,14 +27,17 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceTests {
     @Mock NotificationRepository repository;
+    @Mock ApplicationEventPublisher eventPublisher;
     NotificationService service;
     AppUser user;
 
     @BeforeEach
     void setUp() {
-        service = new NotificationService(repository);
+        service = new NotificationService(repository, eventPublisher);
         user = new AppUser();
         user.setId(1L);
+        user.setEmail("user@test.local");
+        lenient().when(repository.save(any(Notification.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test

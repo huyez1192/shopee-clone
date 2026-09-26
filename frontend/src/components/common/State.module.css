@@ -1,0 +1,22 @@
+.state {
+  display: flex;
+  width: 100%;
+  min-height: 180px;
+  padding: 32px 20px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  color: #777;
+  text-align: center;
+}
+
+.state h2, .state p { margin: 0; }
+.state h2 { color: #444; font-size: 18px; font-weight: 500; }
+.state p { max-width: 520px; line-height: 1.55; }
+.loading::before { width: 28px; height: 28px; content: ""; border: 3px solid #ffd6cc; border-top-color: #ee4d2d; border-radius: 50%; animation: spin .75s linear infinite; }
+.error { color: #b42318; }
+.retry { min-height: 38px; padding: 0 18px; color: #fff; cursor: pointer; background: #ee4d2d; border: 0; border-radius: 3px; }
+.retry:hover { background: #d73211; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .loading::before { animation: none; } }

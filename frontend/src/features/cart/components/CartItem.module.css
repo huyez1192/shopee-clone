@@ -138,3 +138,12 @@
   color: #ee4d2d;
   font-size: 12px;
 }
+
+@media (max-width: 760px) {
+  .item { grid-template-columns: 1fr auto; gap: 14px 12px; padding: 16px 12px; align-items: center; }
+  .productColumn { grid-column: 1 / -1; }
+  .imageLink { width: 68px; height: 68px; }
+  .variantColumn, .priceColumn, .quantityColumn, .totalColumn { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .variantColumn::before, .priceColumn::before, .quantityColumn::before, .totalColumn::before { content: attr(data-label); color: #888; font-size: 12px; }
+  .actionColumn { grid-column: 1 / -1; text-align: right; }
+}

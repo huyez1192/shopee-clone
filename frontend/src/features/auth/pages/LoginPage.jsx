@@ -45,6 +45,8 @@ function LoginPage() {
       <form className={styles.form} onSubmit={handleSubmit}>
         <input
           type="email"
+          aria-label="Email"
+          required
           value={email}
           placeholder="Email"
           autoComplete="email"
@@ -54,6 +56,8 @@ function LoginPage() {
         <div className={styles.passwordField}>
           <input
             type={showPassword ? "text" : "password"}
+            aria-label="Mật khẩu"
+            required
             value={password}
             placeholder="Mật khẩu"
             autoComplete="current-password"
@@ -72,7 +76,7 @@ function LoginPage() {
         </button>
 
         <div className={styles.links}>
-          <button type="button">
+          <button type="button" disabled title="Tính năng chưa được hỗ trợ">
             Quên mật khẩu
           </button>
         </div>
@@ -84,12 +88,12 @@ function LoginPage() {
         </div>
 
         <div className={styles.social}>
-          <button type="button">
+          <button type="button" disabled title="Tính năng chưa được hỗ trợ">
             <strong>f</strong>
             Facebook
           </button>
 
-          <button type="button">
+          <button type="button" disabled title="Tính năng chưa được hỗ trợ">
             <strong>G</strong>
             Google
           </button>

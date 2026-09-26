@@ -134,3 +134,16 @@
   cursor: not-allowed;
   opacity: 0.5;
 }
+
+@media (max-width: 760px) {
+  .page { padding-top: 12px; }
+  .container { width: calc(100% - 20px); }
+  .headerRow { display: none; }
+  .shopHeader { padding: 0 12px; }
+  .checkoutBar { align-items: stretch; flex-direction: column; gap: 14px; padding: 14px 12px; }
+  .selectAllArea { justify-content: space-between; }
+  .checkoutSummary { align-items: stretch; flex-direction: column; gap: 10px; }
+  .checkoutSummary > span { display: flex; justify-content: space-between; align-items: baseline; }
+  .checkoutSummary strong { font-size: 20px; }
+  .checkoutButton { width: 100%; min-width: 0; }
+}

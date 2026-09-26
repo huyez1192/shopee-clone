@@ -9,6 +9,7 @@ import com.ecommerce.minishopee.notification.entity.Notification;
 import com.ecommerce.minishopee.notification.enums.NotificationType;
 import com.ecommerce.minishopee.notification.exception.NotificationNotFoundException;
 import com.ecommerce.minishopee.notification.repository.NotificationRepository;
+import com.ecommerce.minishopee.notification.realtime.NotificationCreatedEvent;
 import com.ecommerce.minishopee.order.entity.Order;
 import com.ecommerce.minishopee.review.entity.Review;
 import com.ecommerce.minishopee.shop.entity.Shop;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -24,9 +26,11 @@ import java.time.LocalDateTime;
 @Service
 public class NotificationService {
     private final NotificationRepository notificationRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public NotificationService(NotificationRepository notificationRepository) {
+    public NotificationService(NotificationRepository notificationRepository, ApplicationEventPublisher eventPublisher) {
         this.notificationRepository = notificationRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -138,7 +142,8 @@ public class NotificationService {
         notification.setTitle(title);
         notification.setMessage(message);
         notification.setTargetUrl(targetUrl);
-        notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
+        eventPublisher.publishEvent(new NotificationCreatedEvent(recipient.getUsername(), toResponse(saved)));
     }
 
     private static NotificationResponse toResponse(Notification notification) {
